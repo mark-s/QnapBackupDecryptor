@@ -4,12 +4,12 @@ using System.Linq;
 
 namespace QnapBackupDecryptor.Core
 {
-    public record FileJob(FileSystemInfo EncryptedFile, FileSystemInfo OutputFile, bool Success, string ErrorMessage);
+    public record FileJob(FileSystemInfo EncryptedFile, FileSystemInfo OutputFile, bool IsValid, string ErrorMessage);
 
     public static class JobMaker
     {
 
-        public static List<FileJob> GetDecryptJob(string encryptedSource, string decryptedTarget, bool overwrite, bool includeSubFolders)
+        public static List<FileJob> GetDecryptJobs(string encryptedSource, string decryptedTarget, bool overwrite, bool includeSubFolders)
         {
             var sourceIsFolder = File.GetAttributes(encryptedSource).HasFlag(FileAttributes.Directory);
             var destIsFolder = File.GetAttributes(decryptedTarget).HasFlag(FileAttributes.Directory);
