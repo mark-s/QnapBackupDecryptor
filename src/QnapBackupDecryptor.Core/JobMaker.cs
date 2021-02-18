@@ -11,8 +11,14 @@ namespace QnapBackupDecryptor.Core
 
         public static List<FileJob> GetDecryptJobs(string encryptedSource, string decryptedTarget, bool overwrite, bool includeSubFolders)
         {
+            if (Directory.Exists(encryptedSource) == false & File.Exists(encryptedSource) == false)
+                return new List<FileJob> { new FileJob(new DirectoryInfo(encryptedSource), new FileInfo(decryptedTarget), false, "Source does not exist") };
+
             var sourceIsFolder = File.GetAttributes(encryptedSource).HasFlag(FileAttributes.Directory);
-            var destIsFolder = File.GetAttributes(decryptedTarget).HasFlag(FileAttributes.Directory);
+
+            bool destIsFolder = false;
+            if (Directory.Exists(decryptedTarget))
+                destIsFolder = File.GetAttributes(decryptedTarget).HasFlag(FileAttributes.Directory);
 
             if (sourceIsFolder & destIsFolder == false)
                 return new List<FileJob> { new FileJob(new DirectoryInfo(encryptedSource), new FileInfo(decryptedTarget), false, "Cannot write an encrypted folder to a single file") };
