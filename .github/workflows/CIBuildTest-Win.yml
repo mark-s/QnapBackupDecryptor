@@ -1,0 +1,40 @@
+name: BuildAndTest-Windows
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  BuildAndTest:
+    runs-on: windows-latest
+    env:
+      DOTNET_NOLOGO: true
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+
+      - name: Build
+        working-directory: src
+        run: dotnet build
+
+      - name: Test
+        working-directory: src
+        run: 'dotnet test --no-build --verbosity normal --test-adapter-path:. --logger:"junit;LogFilePath=../artifacts/{assembly}-test-result.xml;MethodFormat=Class;FailureBodyFormat=Verbose"'
+
+      - name: Publish Unit Test Results
+        uses: zyborg/dotnet-tests-report@v1.3.0
+        with:
+          project_path: ./src/QnapBackupDecryptor.Core.Tests
+          report_name: QnapBackupDecryptor.Core.Tests
+          report_title: QnapBackupDecryptor.Core.Tests
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          gist_name: QnapBackupDecryptor.Core.Tests.md
+          gist_badge_label: "QnapBackupDecryptor.Core: %Counters_passed%/%Counters_total%"
+          gist_token: ${{ secrets.GIST_TOKEN }}

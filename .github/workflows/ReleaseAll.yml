@@ -1,0 +1,95 @@
+name: ReleaseAll
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  release:
+    name: Release
+    strategy:
+      matrix:
+        kind: ["linux", "windows", "macOS"]
+        include:
+          - kind: linux
+            os: ubuntu-latest
+            target: linux-x64
+          - kind: windows
+            os: windows-latest
+            target: win-x64
+          - kind: macOS
+            os: macos-latest
+            target: osx-x64
+    runs-on: ${{ matrix.os }}
+    env:
+      DOTNET_NOLOGO: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+
+      - name: BuildFrameworkDep
+        shell: bash
+        working-directory: src
+        run: |
+          tag=$(git describe --tags --abbrev=0)
+          release_name="QnapBackupDecryptor-FD-$tag-${{ matrix.target }}"
+
+          # Build everything
+          dotnet publish ./QnapBackupDecryptor.Console/QnapBackupDecryptor.Console.csproj  -c Release -f net5.0 -r ${{ matrix.target }} --self-contained false -p:PublishSingleFile=true -o "./releases/$release_name"
+
+          # bin the pdb files
+          rm ./releases/$release_name/*.pdb
+
+          # Pack files
+          if [ "${{ matrix.target }}" == "win-x64" ]; then
+            # Pack to zip for Windows
+            mv ./releases/$release_name/QnapBackupDecryptor.Console.exe ./releases/$release_name/QnapBackupDecryptor.exe
+            7z a -tzip "../${release_name}.zip" "./releases/${release_name}/*"
+          else
+            mv ./releases/$release_name/QnapBackupDecryptor.Console ./releases/$release_name/QnapBackupDecryptor
+            tar czvf "../${release_name}.tar.gz" "./releases/$release_name"
+          fi
+
+          # Delete output directory
+          rm -r "./releases/$release_name"
+      - name: Publish
+        uses: softprops/action-gh-release@v1
+        with:
+          files: "QnapBackupDecryptor-*"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: BuildSelfContained
+        shell: bash
+        working-directory: src
+        run: |
+          tag=$(git describe --tags --abbrev=0)
+          release_name="QnapBackupDecryptor-SC-$tag-${{ matrix.target }}"
+
+          # Build everything
+          dotnet publish QnapBackupDecryptor.sln -c Release -f net5.0 -r ${{ matrix.target }} --self-contained true -o "./releases/$release_name"
+
+          # bin the pdb files
+          rm ./releases/$release_name/*.pdb
+
+          # Pack files
+          if [ "${{ matrix.target }}" == "win-x64" ]; then
+            # Pack to zip for Windows
+            7z a -tzip "../${release_name}.zip" "./releases/${release_name}/*"
+          else
+            tar czvf "../${release_name}.tar.gz" "./releases/$release_name"
+          fi
+
+          # Delete output directory
+          rm -r "./releases/$release_name"
+      - name: Publish
+        uses: softprops/action-gh-release@v1
+        with:
+          files: "QnapBackupDecryptor-*"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
