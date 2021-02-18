@@ -16,6 +16,9 @@ namespace QnapBackupDecryptor.Console
                 ShowSimpleResults(results);
 
             ShowTiming(swElapsed);
+
+            if (results.Any(r => r.Success == false))
+                Environment.ExitCode = 1;
         }
 
         private static void ShowSimpleResults(ConcurrentBag<DecryptResult> results)
@@ -23,6 +26,7 @@ namespace QnapBackupDecryptor.Console
             AnsiConsole.MarkupLine($"[bold]Total encrypted files: {results.Count}[/]");
             AnsiConsole.MarkupLine($"[green]Decrypted\t{results.Count(r => r.Success)}[/]");
             AnsiConsole.MarkupLine($"[red]Failed\t\t{ results.Count(r => !r.Success)}[/]");
+            AnsiConsole.MarkupLine("Add --verbose to see details.");
         }
 
         private static void ShowFileListResults(ConcurrentBag<DecryptResult> results)
@@ -32,10 +36,7 @@ namespace QnapBackupDecryptor.Console
             table.AddColumn(new TableColumn("Encrypted").Centered());
             table.AddColumn(new TableColumn("Decrypted").Centered());
             if (results.Any(r => r.Success == false))
-            {
                 table.AddColumn("Error Message");
-                Environment.ExitCode = 1;
-            }
 
             foreach (var result in results)
                 table.AddRow(ResultToText(result).ToArray());
@@ -64,10 +65,7 @@ namespace QnapBackupDecryptor.Console
                     $"[{colour}]{result.Dest.FullName}[/]",
                     $"[{colour}]{result.ErrorMessage}[/]"
                 };
-
         }
-
-
 
         private static void ShowTiming(TimeSpan swElapsed)
         {
