@@ -1,6 +1,5 @@
 ﻿using NUnit.Framework;
 using Shouldly;
-using System;
 using System.IO;
 using System.Text;
 
@@ -25,8 +24,10 @@ namespace QnapBackupDecryptor.Core.Tests
             var sslDecrypt = OpenSsl.Decrypt(encryptedFile, passwordBytes, decryptedFile);
 
             // Assert
-            var decryptedText = File.ReadAllText(sslDecrypt.Data.FullName);
-            decryptedText.ShouldBe($"line1: this is a plaintext file{Environment.NewLine}line2: End!{Environment.NewLine}");
+            var decryptedText = File.ReadAllLines(sslDecrypt.Data.FullName);
+            decryptedText.Length.ShouldBe(2);
+            decryptedText[0].ShouldStartWith("line1: this is a plaintext file");
+            decryptedText[1].ShouldStartWith("line2: End!");
         }
 
         [Test]
