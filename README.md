@@ -73,6 +73,7 @@ This will prompt for confirmation.
 |-d|--decrypted|Required. Where to place the decrypted file(s)||
 |-p|--password|Password|will prompt|
 |-s|--subfolders|Include Subfolders|false|
+|-r|--removeencrypted|Delete encrypted files (will prompt)|false|
 |-v|--verbose|Set output to verbose|false|
 |-o|--overwrite|Overwrite file(s) in output|false|
 | |--help|Display this help screen.||
