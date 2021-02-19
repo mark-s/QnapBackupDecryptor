@@ -39,17 +39,29 @@ This is the same as the eample gif above.
 - Linux
 `QnapBackupDecryptor -e ./Files/Enc -d ./Files/Enc --verbose --overwrite`
 
+**Decrypt a Folder and delete and successfully decrypted source files**
+
+WARNING: This will delete the Encrypted files if they are successfully decrypted.
+Ensure you have backups as the files will no be recoverable!
+
+This will prompt for confirmation.
+
+- Windows
+`QnapBackupDecryptor.exe -e c:\Files\Enc -d c:\Files\Dec --verbose --removeencrypted`
+- Linux
+`QnapBackupDecryptor -e ./Files/Enc -d ./Files/Enc --verbose --removeencrypted`
+
 **Decrypt a single file to a folder**
 
 - Windows
-`QnapBackupDecryptor.exe -e c:\Files\Enc\Encrypted.jpg -d c:\Files\Dec --verbose `
+`QnapBackupDecryptor.exe -e c:\Files\Enc\Encrypted.jpg -d c:\Files\Dec --verbose`
 - Linux
 `QnapBackupDecryptor -e ./Files/Enc/Encrypted.jpg -d ./Files/Enc --verbose`
 
 **Decrypt a single file and specify the new name**
 
 - Windows
-`QnapBackupDecryptor.exe -e c:\Files\Enc\Encrypted.jpg -d c:\Files\Dec\Decrypted.jpg --verbose `
+`QnapBackupDecryptor.exe -e c:\Files\Enc\Encrypted.jpg -d c:\Files\Dec\Decrypted.jpg --verbose`
 - Linux
 `QnapBackupDecryptor -e ./Files/Enc/Encrypted.jpg -d ./Files/Enc/Decrypted.jpg --verbose`
 
