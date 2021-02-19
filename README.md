@@ -1,3 +1,4 @@
+[![CodeQL](https://github.com/mark-s/QnapBackupDecryptor/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/mark-s/QnapBackupDecryptor/actions/workflows/codeql-analysis.yml) [![BuildAndTest-Linux](https://github.com/mark-s/QnapBackupDecryptor/actions/workflows/CIBuildTest-Linux.yml/badge.svg)](https://github.com/mark-s/QnapBackupDecryptor/actions/workflows/CIBuildTest-Linux.yml) [![BuildAndTest-Windows](https://github.com/mark-s/QnapBackupDecryptor/actions/workflows/CIBuildTest-Win.yml/badge.svg)](https://github.com/mark-s/QnapBackupDecryptor/actions/workflows/CIBuildTest-Win.yml) [![ReleaseAll](https://github.com/mark-s/QnapBackupDecryptor/actions/workflows/ReleaseAll.yml/badge.svg)](https://github.com/mark-s/QnapBackupDecryptor/actions/workflows/ReleaseAll.yml)
 # Qnap Backup Decryptor
 
 A tool to decrypt QNAP NAS encrypted backup files.
