@@ -40,7 +40,7 @@ namespace QnapBackupDecryptor.Core
             if (outputFile.Exists & overwrite == false)
                 return new FileJob(encrytedFile, outputFile, false, "Output file already exists, use --overwrite to overwrite files.");
 
-            if (outputFile.Exists & outputFile.Attributes == FileAttributes.ReadOnly)
+            if (outputFile.Exists & outputFile.Attributes.HasFlag(FileAttributes.ReadOnly))
                 return new FileJob(encrytedFile, outputFile, false, "Cannot write to output file - it's ReadOnly in the file system.");
 
             if (OpenSsl.IsOpenSslEncrypted(encrytedFile) == false)
@@ -60,7 +60,7 @@ namespace QnapBackupDecryptor.Core
             if (encrytedFolder.Exists == false)
                 return new List<FileJob> { new FileJob(encrytedFolder, outputFolder, false, "Encrypted folder doesn't exist") };
 
-            if (outputFolder.Exists & outputFolder.Attributes == FileAttributes.ReadOnly)
+            if (outputFolder.Exists & outputFolder.Attributes.HasFlag(FileAttributes.ReadOnly))
                 return new List<FileJob> { new FileJob(encrytedFolder, outputFolder, false, "Cannot write to output folder - it's ReadOnly in the file system.") };
 
             var fileInfos = encrytedFolder.EnumerateFiles("*.*", includeSubfolders ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
