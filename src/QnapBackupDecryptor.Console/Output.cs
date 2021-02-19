@@ -1,4 +1,5 @@
-﻿using Spectre.Console;
+﻿using QnapBackupDecryptor.Core;
+using Spectre.Console;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -8,63 +9,113 @@ namespace QnapBackupDecryptor.Console
 {
     internal class Output
     {
-        public static void ShowResults(ConcurrentBag<DecryptResult> results, bool verbose, TimeSpan swElapsed)
+        public static void ShowResults(ConcurrentBag<DecryptResult> decryptResults, ConcurrentBag<DeleteResult> deleteResults, bool verbose, TimeSpan swElapsed)
         {
-            if (verbose)
-                ShowFileListResults(results);
+            if (verbose && decryptResults.Count > 1)
+                ShowFileListResults(decryptResults, deleteResults);
             else
-                ShowSimpleResults(results);
+                ShowSimpleResults(decryptResults, deleteResults);
 
             ShowTiming(swElapsed);
 
-            if (results.Any(r => r.Success == false))
+            if (decryptResults.Any(r => r.Success == false))
                 Environment.ExitCode = 1;
         }
 
-        private static void ShowSimpleResults(ConcurrentBag<DecryptResult> results)
-        {
-            AnsiConsole.MarkupLine($"[bold]Total encrypted files: {results.Count}[/]");
-            AnsiConsole.MarkupLine($"[green]Decrypted\t{results.Count(r => r.Success)}[/]");
-            AnsiConsole.MarkupLine($"[red]Failed\t\t{ results.Count(r => !r.Success)}[/]");
-            AnsiConsole.MarkupLine("Add --verbose to see details.");
-        }
-
-        private static void ShowFileListResults(ConcurrentBag<DecryptResult> results)
+        private static void ShowSimpleResults(ConcurrentBag<DecryptResult> decryptResults, ConcurrentBag<DeleteResult> deleteResults)
         {
             var table = new Table();
-            table.AddColumn("Status");
-            table.AddColumn(new TableColumn("Encrypted").Centered());
-            table.AddColumn(new TableColumn("Decrypted").Centered());
-            if (results.Any(r => r.Success == false))
-                table.AddColumn("Error Message");
+            table
+                .AddColumn(new TableColumn("Total encrypted files").RightAligned())
+                .AddColumn(new TableColumn("Decrypt Ok").RightAligned())
+                .AddColumn(new TableColumn("Decrypt Failed").RightAligned())
+                .AddColumn(new TableColumn("Delete Ok").RightAligned())
+                .AddColumn(new TableColumn("Delete Failed").RightAligned());
 
-            foreach (var result in results)
-                table.AddRow(ResultToText(result).ToArray());
+            table.AddRow(
+                $"{decryptResults.Count}",
+                $"[green]{decryptResults.Count(r => r.Success)}[/]",
+                $"[red]{decryptResults.Count(r => !r.Success)}[/]",
+                $"[green]{deleteResults.Count(r => r.DeletedOk)}[/]",
+                $"[red]{deleteResults.Count(r => !r.DeletedOk)}[/]"
+                );
 
             AnsiConsole.Render(table);
 
-            AnsiConsole.MarkupLine($"[bold]Total {results.Count} - Decrypted {results.Count(r => r.Success)}[/]");
+            AnsiConsole.MarkupLine("Add --verbose to see details.");
         }
 
-        private static IEnumerable<string> ResultToText(DecryptResult result)
+        private static void ShowFileListResults(ConcurrentBag<DecryptResult> decryptResults, ConcurrentBag<DeleteResult> deleteResults)
         {
-            var colour = result.Success ? "green" : "red";
+            var table = new Table();
+            table
+                .AddColumn(new TableColumn("Decrypt Status").Centered())
+                .AddColumn("Encrypted")
+                .AddColumn("Decrypted");
 
-            if (result.Success)
-                return new List<string>
+            if (decryptResults.Any(r => r.Success == false))
+                table.AddColumn("Error");
+
+            if (deleteResults.Any())
+            {
+                table.AddColumn(new TableColumn("Delete Status").Centered());
+                if (deleteResults.Any(r => r.DeletedOk == false))
+                    table.AddColumn("Error");
+            }
+
+            var deleteResultsLookup = deleteResults.ToDictionary(r => r.ToDelete, r => r);
+
+            foreach (var result in decryptResults)
+            {
+                var resultRow = DecryptResultToRow(result);
+
+                if (deleteResultsLookup.ContainsKey(result.Source))
+                    resultRow.AddRange(DeleteResultToRow(deleteResultsLookup[result.Source]));
+
+                table.AddRow(resultRow.ToArray());
+            }
+
+            AnsiConsole.Render(table);
+
+            AnsiConsole.MarkupLine($"[bold]Total {decryptResults.Count} - Decrypted {decryptResults.Count(r => r.Success)} - Deleted {deleteResults.Count(r => r.DeletedOk)}[/]");
+
+        }
+
+        private static List<string> DecryptResultToRow(DecryptResult decryptResult)
+        {
+            var colour = decryptResult.Success ? "green" : "red";
+            var status = decryptResult.Success ? "OK" : "Fail";
+
+            var row = new List<string>
                 {
-                    $"[{colour}]Ok[/]",
-                    $"[{colour}]{result.Source.FullName}[/]",
-                    $"[{colour}]{result.Dest.FullName}[/]"
+                    $"[{colour}]{status}[/]",
+                    $"[{colour}]{decryptResult.Source.FullName}[/]",
+                    $"[{colour}]{decryptResult.Dest.FullName}[/]"
                 };
-            else
-                return new List<string>
-                {
-                    $"[{colour}]Ok[/]",
-                    $"[{colour}]{result.Source.FullName}[/]",
-                    $"[{colour}]{result.Dest.FullName}[/]",
-                    $"[{colour}]{result.ErrorMessage}[/]"
-                };
+
+            if (decryptResult.Success == false)
+                row.Add($"[{colour}]{decryptResult.ErrorMessage}[/]");
+
+            return row;
+        }
+
+        private static List<string> DeleteResultToRow(DeleteResult deleteResult)
+        {
+            if (deleteResult == null)
+                return new List<string>(0);
+
+            var colour = deleteResult.DeletedOk ? "green" : "red";
+            var status = deleteResult.DeletedOk ? "Deleted" : "Failed";
+
+            var row = new List<string>
+            {
+                $"[{colour}]{status}[/]"
+            };
+
+            if (deleteResult.DeletedOk == false)
+                row.Add($"[{colour}]{deleteResult.ErrorMessage}[/]");
+
+            return row;
         }
 
         private static void ShowTiming(TimeSpan swElapsed)

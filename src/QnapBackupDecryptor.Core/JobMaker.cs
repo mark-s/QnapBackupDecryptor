@@ -8,7 +8,6 @@ namespace QnapBackupDecryptor.Core
 
     public static class JobMaker
     {
-
         public static List<FileJob> GetDecryptJobs(string encryptedSource, string decryptedTarget, bool overwrite, bool includeSubFolders)
         {
             if (Directory.Exists(encryptedSource) == false & File.Exists(encryptedSource) == false)

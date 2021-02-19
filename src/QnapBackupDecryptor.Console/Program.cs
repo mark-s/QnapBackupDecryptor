@@ -16,34 +16,45 @@ namespace QnapBackupDecryptor.Console
                .WithParsed(Run);
         }
 
-        private static void Run(Options opts)
+        private static void Run(Options options)
         {
-            var password = Prompts.GetPassword(opts);
+            if (Prompts.EnsureDeleteWanted(options) == false)
+                return;
+
+            var password = Prompts.GetPassword(options);
 
             var sw = Stopwatch.StartNew();
 
-            var decryptJobs = JobMaker.GetDecryptJobs(opts.EncryptedSource, opts.OutputDestination, opts.Overwrite, opts.IncludeSubfolders);
+            var decryptJobs = JobMaker.GetDecryptJobs(options.EncryptedSource, options.OutputDestination, options.Overwrite, options.IncludeSubfolders);
 
-            var results = new ConcurrentBag<DecryptResult>();
+            var decryptResults = new ConcurrentBag<DecryptResult>();
+            var deleteResults = new ConcurrentBag<DeleteResult>();
+
             Parallel.ForEach(decryptJobs,
                 job =>
                 {
                     if (job.IsValid == false)
-                        results.Add(new DecryptResult(job.EncryptedFile, job.OutputFile, job.IsValid, job.ErrorMessage));
+                        decryptResults.Add(new DecryptResult(job.EncryptedFile, job.OutputFile, job.IsValid, job.ErrorMessage));
                     else
                     {
                         var result = OpenSsl.Decrypt(new FileInfo(job.EncryptedFile.FullName), password, new FileInfo(job.OutputFile.FullName));
-                        results.Add(new DecryptResult(job.EncryptedFile, job.OutputFile, result.IsSuccess, result.ErrorMessage));
+                        decryptResults.Add(new DecryptResult(job.EncryptedFile, job.OutputFile, result.IsSuccess, result.ErrorMessage));
+
+                        // Delete encrypted file only if success and option chosen
+                        if (result.IsSuccess && options.RemoveEncrypted)
+                            deleteResults.Add(FileService.TryDelete(job.EncryptedFile));
                     }
                 });
 
             sw.Stop();
-            Output.ShowResults(results, opts.Verbose, sw.Elapsed);
+
+            Output.ShowResults(decryptResults, deleteResults, options.Verbose, sw.Elapsed);
         }
+
 
     }
 
-    public record DecryptResult(FileSystemInfo Source, FileSystemInfo Dest, bool Success, string ErrorMessage);
+
 
 
 }
