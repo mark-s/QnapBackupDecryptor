@@ -40,7 +40,7 @@ This is the same as the eample gif above.
 - Linux
 `QnapBackupDecryptor -e ./Files/Enc -d ./Files/Enc --verbose --overwrite`
 
-**Decrypt a Folder and delete and successfully decrypted source files**
+**Decrypt a Folder and delete successfully decrypted source files**
 
 WARNING: This will delete the Encrypted files if they are successfully decrypted.
 Ensure you have backups as the files will not be recoverable!
