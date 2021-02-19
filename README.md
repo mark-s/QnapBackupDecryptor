@@ -42,7 +42,7 @@ This is the same as the eample gif above.
 **Decrypt a Folder and delete and successfully decrypted source files**
 
 WARNING: This will delete the Encrypted files if they are successfully decrypted.
-Ensure you have backups as the files will no be recoverable!
+Ensure you have backups as the files will not be recoverable!
 
 This will prompt for confirmation.
 
