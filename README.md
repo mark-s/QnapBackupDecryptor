@@ -5,8 +5,11 @@ A tool to decrypt QNAP NAS encrypted backup files.
 
 This will decrypt **backup** files (not sync files) created using the [QNAP Hybrid Backup Sync](https://www.qnap.com/en-uk/software/hybrid-backup-sync) tool.
 
+This tool is an alternative to the [QENC Decrypter](https://www.qnap.com/en-uk/utilities/enterprise) provided by QNAP. **This tool is faster by orders of magnitude** (eg: 1,800 files takes 0.9 seconds using this tool and approx 20 seconds using the QNAP tool).
 
 ![See it in action](https://raw.githubusercontent.com/mark-s/QnapBackupDecryptor/master/Images/ExampleDecrypt.gif)
+
+
 
 ## Installation
 
