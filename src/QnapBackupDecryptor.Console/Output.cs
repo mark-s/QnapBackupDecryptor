@@ -131,5 +131,13 @@ namespace QnapBackupDecryptor.Console
             }
         }
 
+        public static ProgressColumn[] GetProgressColumns()
+            => new ProgressColumn[]
+            {
+                new TaskDescriptionColumn(),
+                new ProgressBarColumn(),
+                new PercentageColumn(),
+                new SpinnerColumn(Spinner.Known.SimpleDots)
+            };
     }
 }

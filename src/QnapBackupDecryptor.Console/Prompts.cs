@@ -32,8 +32,6 @@ namespace QnapBackupDecryptor.Console
                     .AddChoice("n"));
 
             return response.ToLowerInvariant() == "y";
-
-
         }
     }
 }

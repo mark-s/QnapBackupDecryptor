@@ -4,14 +4,12 @@ using System.Linq;
 
 namespace QnapBackupDecryptor.Core
 {
-    public record FileJob(FileSystemInfo EncryptedFile, FileSystemInfo OutputFile, bool IsValid, string ErrorMessage);
-
     public static class JobMaker
     {
         public static List<FileJob> GetDecryptJobs(string encryptedSource, string decryptedTarget, bool overwrite, bool includeSubFolders)
         {
-            if (Directory.Exists(encryptedSource) == false & File.Exists(encryptedSource) == false)
-                return new List<FileJob> { new FileJob(new DirectoryInfo(encryptedSource), new FileInfo(decryptedTarget), false, "Source does not exist") };
+            if (Directory.Exists(encryptedSource) == false && File.Exists(encryptedSource) == false)
+                return new FileJob(new DirectoryInfo(encryptedSource), new FileInfo(decryptedTarget), false, "Source does not exist").ToList();
 
             var sourceIsFolder = File.GetAttributes(encryptedSource).HasFlag(FileAttributes.Directory);
 
@@ -20,19 +18,19 @@ namespace QnapBackupDecryptor.Core
                 destIsFolder = File.GetAttributes(decryptedTarget).HasFlag(FileAttributes.Directory);
 
             if (sourceIsFolder & destIsFolder == false)
-                return new List<FileJob> { new FileJob(new DirectoryInfo(encryptedSource), new FileInfo(decryptedTarget), false, "Cannot write an encrypted folder to a single file") };
+                return new FileJob(new DirectoryInfo(encryptedSource), new FileInfo(decryptedTarget), false, "Cannot write an encrypted folder to a single file").ToList();
 
             if (sourceIsFolder & destIsFolder)
-                return GetJobs(new DirectoryInfo(encryptedSource), new DirectoryInfo(decryptedTarget), overwrite, includeSubFolders);
+                return GetFolderToFolderJobs(new DirectoryInfo(encryptedSource), new DirectoryInfo(decryptedTarget), overwrite, includeSubFolders);
 
             if (destIsFolder)
-                return new List<FileJob> { GetJob(new FileInfo(encryptedSource), new DirectoryInfo(decryptedTarget), overwrite) };
+                return GetFileToFolderJob(new FileInfo(encryptedSource), new DirectoryInfo(decryptedTarget), overwrite).ToList();
             else
-                return new List<FileJob> { GetJob(new FileInfo(encryptedSource), new FileInfo(decryptedTarget), overwrite) };
+                return GetFileToFileJob(new FileInfo(encryptedSource), new FileInfo(decryptedTarget), overwrite).ToList();
         }
 
 
-        private static FileJob GetJob(FileInfo encrytedFile, FileInfo outputFile, bool overwrite)
+        private static FileJob GetFileToFileJob(FileInfo encrytedFile, FileInfo outputFile, bool overwrite)
         {
             if (encrytedFile.Exists == false)
                 return new FileJob(encrytedFile, outputFile, false, "Encrypted file doesn't exist");
@@ -49,26 +47,25 @@ namespace QnapBackupDecryptor.Core
             return new FileJob(encrytedFile, outputFile, true, string.Empty);
         }
 
-        private static FileJob GetJob(FileInfo encrytedFile, DirectoryInfo outputFolder, bool overwrite)
+        private static FileJob GetFileToFolderJob(FileInfo encrytedFile, DirectoryInfo outputFolder, bool overwrite)
         {
             var outputFile = new FileInfo(Path.Combine(outputFolder.FullName, encrytedFile.Name));
-            return GetJob(encrytedFile, outputFile, overwrite);
+            return GetFileToFileJob(encrytedFile, outputFile, overwrite);
         }
 
-        private static List<FileJob> GetJobs(DirectoryInfo encrytedFolder, DirectoryInfo outputFolder, bool overwrite, bool includeSubfolders)
+        private static List<FileJob> GetFolderToFolderJobs(DirectoryInfo encrytedFolder, DirectoryInfo outputFolder, bool overwrite, bool includeSubfolders)
         {
             if (encrytedFolder.Exists == false)
-                return new List<FileJob> { new FileJob(encrytedFolder, outputFolder, false, "Encrypted folder doesn't exist") };
+                return new FileJob(encrytedFolder, outputFolder, false, "Encrypted folder doesn't exist").ToList();
 
             if (outputFolder.Exists & outputFolder.Attributes.HasFlag(FileAttributes.ReadOnly))
-                return new List<FileJob> { new FileJob(encrytedFolder, outputFolder, false, "Cannot write to output folder - it's ReadOnly in the file system.") };
+                return new FileJob(encrytedFolder, outputFolder, false, "Cannot write to output folder - it's ReadOnly in the file system.").ToList();
 
-            var fileInfos = encrytedFolder.EnumerateFiles("*.*", includeSubfolders ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
-
-            return fileInfos
-                .AsParallel()
-                .Select(encrytedFile => GetJob(encrytedFile, outputFolder, overwrite))
-                .ToList();
+            return encrytedFolder
+                    .EnumerateFiles("*.*", includeSubfolders ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)
+                    .AsParallel()
+                    .Select(encrytedFile => GetFileToFolderJob(encrytedFile, outputFolder, overwrite))
+                    .ToList();
         }
 
 

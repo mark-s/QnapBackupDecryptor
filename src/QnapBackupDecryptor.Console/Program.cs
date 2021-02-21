@@ -24,63 +24,67 @@ namespace QnapBackupDecryptor.Console
             if (Prompts.EnsureDeleteWanted(options) == false)
                 return;
 
-            // get the password byes
             var password = Prompts.GetPassword(options);
 
-            var decryptResults = new ConcurrentBag<DecryptResult>();
-            var deleteResults = new ConcurrentBag<DeleteResult>();
-            var decryptJobs = new List<FileJob>();
+            var stopwatch = Stopwatch.StartNew();
 
-            var sw = Stopwatch.StartNew();
+            var decryptJobs = GetDecryptJobs(options);
+
+            DoDecrypt(decryptJobs, options, password, stopwatch);
+        }
+
+        private static IReadOnlyList<FileJob> GetDecryptJobs(Options options)
+        {
+            var decryptJobs = new List<FileJob>();
 
             // get file list to process
             AnsiConsole.Status()
-                .Start("Getting Files...", ctx =>
+                .Start("Getting Files...", statusContext =>
                 {
-                    ctx.Spinner(Spinner.Known.SimpleDots);
-                    ctx.SpinnerStyle(Style.Parse("green"));
+                    statusContext.Spinner(Spinner.Known.SimpleDots);
+                    statusContext.SpinnerStyle(Style.Parse("green"));
 
                     decryptJobs = JobMaker.GetDecryptJobs(options.EncryptedSource, options.OutputDestination, options.Overwrite, options.IncludeSubfolders);
                 });
 
-            // decrypt & delete if requested
+            return decryptJobs;
+        }
+
+        private static void DoDecrypt(IReadOnlyList<FileJob> decryptJobs, Options options, byte[] password, Stopwatch sw)
+        {
             AnsiConsole.Progress()
-                .Columns(new ProgressColumn[]
+                .Columns(Output.GetProgressColumns())
+                .AutoClear(true)
+                .Start(progressContext =>
                 {
-                    new TaskDescriptionColumn(),
-                    new ProgressBarColumn(),
-                    new PercentageColumn(),
-                    new SpinnerColumn(Spinner.Known.SimpleDots)
-                })
-                .Start(ctx =>
-                {
-                    var progressTask = ctx.AddTask("[green]Decrypting Files[/]");
+                    var progressTask = progressContext.AddTask("[green]Decrypting Files[/]");
 
-                    Parallel.ForEach(
-                        decryptJobs,
-                        job =>
+                    var decryptResults = new ConcurrentBag<DecryptResult>();
+                    var deleteResults = new ConcurrentBag<DeleteResult>();
+
+                    Parallel.ForEach(decryptJobs, currentJob =>
+                    {
+                        if (currentJob.IsValid)
                         {
-                            if (job.IsValid == false)
-                                decryptResults.Add(new DecryptResult(job.EncryptedFile, job.OutputFile, job.IsValid, job.ErrorMessage));
-                            else
-                            {
-                                var decryptionResult = OpenSsl.Decrypt(new FileInfo(job.EncryptedFile.FullName), password, new FileInfo(job.OutputFile.FullName));
-                                decryptResults.Add(new DecryptResult(job.EncryptedFile, job.OutputFile, decryptionResult.IsSuccess, decryptionResult.ErrorMessage));
+                            var decryptionResult = OpenSsl.Decrypt(new FileInfo(currentJob.EncryptedFile.FullName), password, new FileInfo(currentJob.OutputFile.FullName));
 
-                                // Delete encrypted file only if success and option chosen
-                                if (decryptionResult.IsSuccess && options.RemoveEncrypted)
-                                    deleteResults.Add(FileService.TryDelete(job.EncryptedFile));
+                            decryptResults.Add(new DecryptResult(currentJob.EncryptedFile, currentJob.OutputFile, decryptionResult.IsSuccess, decryptionResult.ErrorMessage));
 
-                                progressTask.Increment(((double)decryptResults.Count / (double)decryptJobs.Count) * (double)100);
-                            }
-                        });
+                            // Delete encrypted file only if success and option chosen
+                            if (decryptionResult.IsSuccess && options.RemoveEncrypted)
+                                deleteResults.Add(FileService.TryDelete(currentJob.EncryptedFile));
+                        }
+                        else
+                            decryptResults.Add(new DecryptResult(currentJob.EncryptedFile, currentJob.OutputFile, currentJob.IsValid, currentJob.ErrorMessage));
+
+                        progressTask.Increment(((double)decryptResults.Count / (double)decryptJobs.Count) * (double)100);
+                    });
+
+                    sw.Stop();
+
+                    Output.ShowResults(decryptResults, deleteResults, options.Verbose, sw.Elapsed);
                 });
-
-            sw.Stop();
-
-            Output.ShowResults(decryptResults, deleteResults, options.Verbose, sw.Elapsed);
         }
 
     }
-
 }

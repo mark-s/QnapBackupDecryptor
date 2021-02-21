@@ -42,18 +42,18 @@ namespace QnapBackupDecryptor.Core
 
         private static byte[] GetSalt(FileInfo encryptedFile)
         {
-            using var inputStream = encryptedFile.OpenRead();
+            using var fileStream = encryptedFile.OpenRead();
 
             // read the salt header
             var salt = new byte[SALT_HEADER_SIZE];
-            inputStream.Read(salt);
+            fileStream.Read(salt);
 
             // sanity check
             var saltHeader = Encoding.UTF8.GetString(salt);
             if (saltHeader != SALT_HEADER_TEXT)
-                return null;
+                return Array.Empty<byte>();
 
-            inputStream.Read(salt, 0, SALT_SIZE);
+            fileStream.Read(salt, 0, SALT_SIZE);
 
             return salt;
         }
