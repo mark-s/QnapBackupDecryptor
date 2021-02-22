@@ -16,8 +16,8 @@ namespace QnapBackupDecryptor.Core.Tests
         public void OpenSSLDecrypt_Text()
         {
             // Arrange
-            var encryptedFile = new FileInfo(@"TestFiles/encrypted.txt");
-            var decryptedFile = new FileInfo(@"TestFiles/plaintext.txt");
+            var encryptedFile = new FileInfo(Path.Combine("TestFiles", "encrypted.txt"));
+            var decryptedFile = new FileInfo(Path.Combine("TestFiles", "plaintext.txt"));
 
             // Act 
             var passwordBytes = Encoding.UTF8.GetBytes(PASSWORD);
@@ -34,14 +34,12 @@ namespace QnapBackupDecryptor.Core.Tests
         public void OpenSSLDecrypt_Binary()
         {
             // Arrange
-            var encryptedFile = new FileInfo(@"TestFiles/encrypted.jpg");
-            var decryptedFile = new FileInfo(@"TestFiles/decrypted.jpg");
-
+            var encryptedFile = new FileInfo(Path.Combine("TestFiles", "encrypted.jpg"));
+            var decryptedFile = new FileInfo(Path.Combine("TestFiles", "decrypted.jpg"));
 
             // Act 
             var passwordBytes = Encoding.UTF8.GetBytes(PASSWORD);
-            var decrpyted = OpenSsl.Decrypt(encryptedFile, passwordBytes, decryptedFile);
-
+            var decrypted = OpenSsl.Decrypt(encryptedFile, passwordBytes, decryptedFile);
 
             // Assert
             //var decryptedText = File.ReadAllText(decrpyted.FullName);
