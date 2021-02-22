@@ -12,13 +12,19 @@ namespace QnapBackupDecryptor.Console
         public static void ShowResults(ConcurrentBag<DecryptResult> decryptResults, ConcurrentBag<DeleteResult> deleteResults, bool verbose, TimeSpan swElapsed)
         {
             if (verbose && decryptResults.Count > 1)
+            {
                 ShowFileListResults(decryptResults, deleteResults);
-            else
                 ShowSimpleResults(decryptResults, deleteResults);
+            }
+            else
+            {
+                ShowSimpleResults(decryptResults, deleteResults);
+                AnsiConsole.MarkupLine("Add --verbose to see details.");
+            }
 
             ShowTiming(swElapsed);
 
-            if (decryptResults.Any(r => r.Success == false))
+            if (decryptResults.Any(r => r.Success == false) || deleteResults.Any(r => r.DeletedOk == false))
                 Environment.ExitCode = 1;
         }
 
@@ -41,8 +47,6 @@ namespace QnapBackupDecryptor.Console
                 );
 
             AnsiConsole.Render(table);
-
-            AnsiConsole.MarkupLine("Add --verbose to see details.");
         }
 
         private static void ShowFileListResults(ConcurrentBag<DecryptResult> decryptResults, ConcurrentBag<DeleteResult> deleteResults)
@@ -69,15 +73,13 @@ namespace QnapBackupDecryptor.Console
             {
                 var resultRow = DecryptResultToRow(result);
 
-                if (deleteResultsLookup.ContainsKey(result.Source))
-                    resultRow.AddRange(DeleteResultToRow(deleteResultsLookup[result.Source]));
+                if (deleteResultsLookup.TryGetValue(result.Source, out var deleteResult))
+                    resultRow.AddRange(DeleteResultToRow(deleteResult));
 
                 table.AddRow(resultRow.ToArray());
             }
 
             AnsiConsole.Render(table);
-
-            AnsiConsole.MarkupLine($"[bold]Total {decryptResults.Count} - Decrypted {decryptResults.Count(r => r.Success)} - Deleted {deleteResults.Count(r => r.DeletedOk)}[/]");
 
         }
 
@@ -137,7 +139,7 @@ namespace QnapBackupDecryptor.Console
                 new TaskDescriptionColumn(),
                 new ProgressBarColumn(),
                 new PercentageColumn(),
-                new SpinnerColumn(Spinner.Known.SimpleDots)
+                new SpinnerColumn(Spinner.Known.SimpleDots),
             };
     }
 }

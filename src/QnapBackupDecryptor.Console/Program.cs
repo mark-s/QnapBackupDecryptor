@@ -52,15 +52,17 @@ namespace QnapBackupDecryptor.Console
 
         private static void DoDecrypt(IReadOnlyList<FileJob> decryptJobs, Options options, byte[] password, Stopwatch sw)
         {
+            var decryptResults = new ConcurrentBag<DecryptResult>();
+            var deleteResults = new ConcurrentBag<DeleteResult>();
+
+
             AnsiConsole.Progress()
                 .Columns(Output.GetProgressColumns())
                 .AutoClear(true)
                 .Start(progressContext =>
                 {
                     var progressTask = progressContext.AddTask("[green]Decrypting Files[/]");
-
-                    var decryptResults = new ConcurrentBag<DecryptResult>();
-                    var deleteResults = new ConcurrentBag<DeleteResult>();
+                    progressTask.MaxValue = decryptJobs.Count;
 
                     Parallel.ForEach(decryptJobs, currentJob =>
                     {
@@ -73,17 +75,21 @@ namespace QnapBackupDecryptor.Console
                             // Delete encrypted file only if success and option chosen
                             if (decryptionResult.IsSuccess && options.RemoveEncrypted)
                                 deleteResults.Add(FileService.TryDelete(currentJob.EncryptedFile));
+
                         }
                         else
                             decryptResults.Add(new DecryptResult(currentJob.EncryptedFile, currentJob.OutputFile, currentJob.IsValid, currentJob.ErrorMessage));
 
-                        progressTask.Increment(((double)decryptResults.Count / (double)decryptJobs.Count) * (double)100);
+                        progressTask.Increment(decryptResults.Count);
+
                     });
 
-                    sw.Stop();
-
-                    Output.ShowResults(decryptResults, deleteResults, options.Verbose, sw.Elapsed);
                 });
+
+            sw.Stop();
+
+            Output.ShowResults(decryptResults, deleteResults, options.Verbose, sw.Elapsed);
+
         }
 
     }
