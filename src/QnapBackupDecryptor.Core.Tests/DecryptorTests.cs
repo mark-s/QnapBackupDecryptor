@@ -11,13 +11,28 @@ namespace QnapBackupDecryptor.Core.Tests
     {
         private const string PASSWORD = "wisLUBIMyBNcnvo3eDMS";
 
+        [Test]
+        public void OpenSSLDecrypt_ValidPassword_OkResult()
+        {
+            // Arrange
+            var encryptedFile = new FileInfo(Path.Combine("TestFiles", "encrypted.txt"));
+            var outputFile = new FileInfo("decrypted.txt");
+
+            // Act 
+            var passwordBytes = Encoding.UTF8.GetBytes(PASSWORD);
+            var sslDecrypt = OpenSsl.Decrypt(encryptedFile, passwordBytes, outputFile);
+
+            // Assert
+            sslDecrypt.IsSuccess.ShouldBeTrue();
+        }
+
 
         [Test]
         public void OpenSSLDecrypt_Text()
         {
             // Arrange
             var encryptedFile = new FileInfo(Path.Combine("TestFiles", "encrypted.txt"));
-            var outputFile = new FileInfo(Path.Combine("TestFiles", "decrypted.txt"));
+            var outputFile = new FileInfo("decrypted.txt");
 
             // Act 
             var passwordBytes = Encoding.UTF8.GetBytes(PASSWORD);

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 
 namespace QnapBackupDecryptor.Core
@@ -108,11 +109,11 @@ namespace QnapBackupDecryptor.Core
                 using (var destination = outputFile.OpenWrite())
                 using (var cryptoStream = new CryptoStream(encryptedFileStream, decryptor, CryptoStreamMode.Read))
                 {
-                    outputFile.Attributes |= FileAttributes.Hidden;
+                    HideFile(outputFile);
                     cryptoStream.CopyTo(destination);
                 }
 
-                outputFile.Attributes -= FileAttributes.Hidden;
+                ShowFile(outputFile);
 
                 return Result<FileInfo>.OkResult(outputFile);
             }
@@ -128,6 +129,18 @@ namespace QnapBackupDecryptor.Core
                 rijndaelManaged.Clear();
                 rijndaelManaged.Dispose();
             }
+        }
+
+        private static void HideFile(FileSystemInfo file)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                file.Attributes |= FileAttributes.Hidden;
+        }
+
+        private static void ShowFile(FileSystemInfo file)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                file.Attributes -= FileAttributes.Hidden;
         }
     }
 }
