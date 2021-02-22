@@ -17,11 +17,11 @@ namespace QnapBackupDecryptor.Core.Tests
         {
             // Arrange
             var encryptedFile = new FileInfo(Path.Combine("TestFiles", "encrypted.txt"));
-            var decryptedFile = new FileInfo(Path.Combine("TestFiles", "plaintext.txt"));
+            var outputFile = new FileInfo(Path.Combine("TestFiles", "decrypted.txt"));
 
             // Act 
             var passwordBytes = Encoding.UTF8.GetBytes(PASSWORD);
-            var sslDecrypt = OpenSsl.Decrypt(encryptedFile, passwordBytes, decryptedFile);
+            var sslDecrypt = OpenSsl.Decrypt(encryptedFile, passwordBytes, outputFile);
 
             // Assert
             var decryptedText = File.ReadAllLines(sslDecrypt.Data.FullName);
