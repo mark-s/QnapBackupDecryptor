@@ -1,29 +1,26 @@
-
 name: InspectMaster
 
 # Controls when the action will run. 
-on:
-  # Triggers the workflow on push or pull request events but only for the master branch
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: [push]
 
 jobs:
-  self-test:
-   runs-on: ubuntu-latest
+  inspection:
+   runs-on: ubuntu-latest # or macos-latest, windows-latest
    name: InspectCode
    steps:
-
+         
+    - name: Checkout
+      uses: actions/checkout@v2
+      
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
          dotnet-version: 5.0.x
          
-    - name: Checkout
-      uses: actions/checkout@v2
+    - name: Restore
+      run: dotnet restore
     
-    - name: Resharper InspectCode
-      uses: nbadal/inspectcode-action@v1
+    - name: Inspect code
+      uses: muno92/resharper_inspectcode@1.0.0
       with:
-        solution: './src/QnapBackupDecryptor.sln'
+          solution: './src/QnapBackupDecryptor.sln'
