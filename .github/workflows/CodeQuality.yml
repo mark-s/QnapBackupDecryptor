@@ -1,0 +1,22 @@
+
+name: InspectMaster
+
+# Controls when the action will run. 
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  self-test:
+   runs-on: ubuntu-latest
+   name: Self Test
+   steps:
+     - name: Checkout
+       uses: actions/checkout@v2
+     - name: Resharper InspectCode
+       uses: nbadal/inspectcode-action@v1
+       with:
+          solution: './src/QnapBackupDecryptor.sln'
