@@ -24,4 +24,4 @@ jobs:
     - name: Inspect code
       uses: muno92/resharper_inspectcode@1.0.0
       with:
-          solution: './src/QnapBackupDecryptor.sln'
+          solutionPath: './src/QnapBackupDecryptor.sln'
