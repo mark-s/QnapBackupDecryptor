@@ -12,11 +12,18 @@ on:
 jobs:
   self-test:
    runs-on: ubuntu-latest
-   name: Self Test
+   name: InspectCode
    steps:
-     - name: Checkout
-       uses: actions/checkout@v2
-     - name: Resharper InspectCode
-       uses: nbadal/inspectcode-action@v1
-       with:
-          solution: './src/QnapBackupDecryptor.sln'
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+         dotnet-version: 5.0.x
+         
+    - name: Checkout
+      uses: actions/checkout@v2
+    
+    - name: Resharper InspectCode
+      uses: nbadal/inspectcode-action@v1
+      with:
+        solution: './src/QnapBackupDecryptor.sln'
