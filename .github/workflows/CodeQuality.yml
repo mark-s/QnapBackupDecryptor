@@ -18,7 +18,8 @@ jobs:
          dotnet-version: 5.0.x
          
     - name: Restore
-      run: dotnet restore
+      working-directory: src
+      run: dotnet restore 
     
     - name: Inspect code
       uses: muno92/resharper_inspectcode@1.0.0
