@@ -1,22 +1,19 @@
-﻿using System.IO;
+﻿namespace QnapBackupDecryptor.Core;
 
-namespace QnapBackupDecryptor.Core
+public static class FileInfoExtensions
 {
-    public static class FileInfoExtensions
+    public static bool TryDelete(this FileInfo fileInfo)
     {
-        public static bool TryDelete(this FileInfo fileInfo)
+        try
         {
-            try
-            {
-                if (fileInfo.Exists)
-                    fileInfo.Delete();
+            if (fileInfo.Exists)
+                fileInfo.Delete();
 
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            return true;
+        }
+        catch
+        {
+            return false;
         }
     }
 }
