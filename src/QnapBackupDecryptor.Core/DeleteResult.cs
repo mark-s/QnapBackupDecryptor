@@ -1,6 +1,3 @@
-﻿using System.IO;
+﻿namespace QnapBackupDecryptor.Core;
 
-namespace QnapBackupDecryptor.Core
-{
-    public record DeleteResult(FileSystemInfo ToDelete, bool DeletedOk, string ErrorMessage);
-}
+public record DeleteResult(FileSystemInfo ToDelete, bool DeletedOk, string ErrorMessage);
