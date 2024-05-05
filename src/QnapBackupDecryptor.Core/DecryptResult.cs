@@ -1,3 +1,3 @@
 ﻿namespace QnapBackupDecryptor.Core;
 
-public record DecryptResult(FileSystemInfo Source, FileSystemInfo Dest, bool Success, string ErrorMessage);
+public sealed record DecryptResult(FileSystemInfo Source, FileSystemInfo Dest, bool Success, string ErrorMessage);

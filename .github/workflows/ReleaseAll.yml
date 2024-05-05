@@ -25,12 +25,15 @@ jobs:
       DOTNET_NOLOGO: true
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v1
+        uses: actions/checkout@v4
         with:
-          dotnet-version: 5.0.x
+          fetch-depth: 0
+
+      # Install the .NET Core workload
+      - name: Install .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 6.0.x
 
       - name: BuildFrameworkDep
         shell: bash
@@ -40,7 +43,7 @@ jobs:
           release_name="QnapBackupDecryptor-FD-$tag-${{ matrix.target }}"
 
           # Build everything
-          dotnet publish ./QnapBackupDecryptor.Console/QnapBackupDecryptor.Console.csproj  -c Release -f net5.0 -r ${{ matrix.target }} --self-contained false -p:PublishSingleFile=true -o "./releases/$release_name"
+          dotnet publish ./QnapBackupDecryptor.Console/QnapBackupDecryptor.Console.csproj  -c Release -f net6.0 -r ${{ matrix.target }} --self-contained false -p:PublishSingleFile=true -o "./releases/$release_name"
 
           # bin the pdb files
           rm ./releases/$release_name/*.pdb
@@ -58,7 +61,7 @@ jobs:
           # Delete output directory
           rm -r "./releases/$release_name"
       - name: Publish
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: "QnapBackupDecryptor-*"
         env:
@@ -72,7 +75,7 @@ jobs:
           release_name="QnapBackupDecryptor-SC-$tag-${{ matrix.target }}"
 
           # Build everything
-          dotnet publish QnapBackupDecryptor.sln -c Release -f net5.0 -r ${{ matrix.target }} --self-contained true -o "./releases/$release_name"
+          dotnet publish QnapBackupDecryptor.sln -c Release -f net6.0 -r ${{ matrix.target }} --self-contained true -o "./releases/$release_name"
 
           # bin the pdb files
           rm ./releases/$release_name/*.pdb
@@ -88,7 +91,7 @@ jobs:
           # Delete output directory
           rm -r "./releases/$release_name"
       - name: Publish
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: "QnapBackupDecryptor-*"
         env:

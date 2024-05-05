@@ -3,7 +3,7 @@ using System.Text;
 
 namespace QnapBackupDecryptor.Console;
 
-internal class Prompts
+internal static class Prompts
 {
     public static byte[] GetPassword(Options opts)
     {
