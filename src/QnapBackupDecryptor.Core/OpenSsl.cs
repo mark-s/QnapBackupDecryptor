@@ -57,8 +57,6 @@ public static class OpenSsl
 
         var currentHash = Array.Empty<byte>();
 
-        using var md5Hash = MD5.Create();
-
         while (keyAndIvBytes.Count < COMBINED_KEY_AND_IV_LENGTH)
         {
             var preHashLength = currentHash.Length + password.Length + salt.Length;
@@ -68,7 +66,7 @@ public static class OpenSsl
             Buffer.BlockCopy(password, 0, preHash, currentHash.Length, password.Length);
             Buffer.BlockCopy(salt, 0, preHash, currentHash.Length + password.Length, salt.Length);
 
-            currentHash = md5Hash.ComputeHash(preHash);
+            currentHash = MD5.HashData(preHash);
             keyAndIvBytes.AddRange(currentHash);
         }
 

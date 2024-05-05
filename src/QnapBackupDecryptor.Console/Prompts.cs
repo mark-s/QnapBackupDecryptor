@@ -31,6 +31,6 @@ internal static class Prompts
                 .AddChoice("y")
                 .AddChoice("n"));
 
-        return response.ToLowerInvariant() == "y";
+        return response.Equals("y", StringComparison.InvariantCultureIgnoreCase);
     }
 }
