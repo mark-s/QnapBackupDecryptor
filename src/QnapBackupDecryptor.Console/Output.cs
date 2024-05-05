@@ -100,7 +100,7 @@ internal static class Output
     private static IEnumerable<string> DeleteResultToRow(DeleteResult? deleteResult)
     {
         if (deleteResult == null)
-            return [];
+            return new List<string>(0);
 
         var colour = deleteResult.DeletedOk ? "green" : "red";
         var status = deleteResult.DeletedOk ? "Deleted" : "Failed";
@@ -130,10 +130,11 @@ internal static class Output
     }
 
     public static ProgressColumn[] GetProgressColumns()
-        => [
+        => new ProgressColumn[]
+        {
             new TaskDescriptionColumn(),
             new ProgressBarColumn(),
             new PercentageColumn(),
-            new SpinnerColumn(Spinner.Known.SimpleDots)
-        ];
+            new SpinnerColumn(Spinner.Known.SimpleDots),
+        };
 }
