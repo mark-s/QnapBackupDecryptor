@@ -10,7 +10,7 @@ internal class Options
     public string? Password { get; init; }
 
     [Option('e', "encrypted", Required = true, HelpText = "Encrypted file or folder")]
-    public required  string EncryptedSource { get; init; } = null!;
+    public string EncryptedSource { get; init; } = null!;
 
     [Option('d', "decrypted", Required = true, HelpText = "Where to place the decrypted file(s)")]
     public string OutputDestination { get; init; } = null!;
