@@ -4,11 +4,12 @@ namespace QnapBackupDecryptor.Core;
 
 public static class OpenSsl
 {
-    public const string SALT_HEADER_TEXT = "Salted__";
-    public const int SALT_HEADER_SIZE = 8;
-    public const int SALT_SIZE = 8;
-    public const int KEY_SIZE = 32;
-    public const int IV_SIZE = 16;
+    private const string SALT_HEADER_TEXT = "Salted__";
+    private const int SALT_HEADER_SIZE = 8;
+    private const int SALT_SIZE = 8;
+    private const int KEY_SIZE = 32;
+    private const int IV_SIZE = 16;
+    private const int COMBINED_KEY_AND_IV_LENGTH = KEY_SIZE + IV_SIZE;
 
     public static Result<bool> IsOpenSslEncrypted(FileInfo file)
     {
@@ -16,7 +17,7 @@ public static class OpenSsl
         try
         {
             using var fileStream = file.OpenRead();
-            fileStream.Read(saltHeaderBytes);
+            _ = fileStream.Read(saltHeaderBytes);
             var startsWithHeaderText = System.Text.Encoding.UTF8.GetString(saltHeaderBytes) == SALT_HEADER_TEXT;
             return Result<bool>.OkResult(startsWithHeaderText);
         }
@@ -44,7 +45,7 @@ public static class OpenSsl
 
         var salt = new byte[SALT_SIZE];
         fileStream.Position = SALT_HEADER_SIZE;
-        fileStream.Read(salt, 0, SALT_SIZE);
+        _ = fileStream.Read(salt, 0, SALT_SIZE);
 
         return salt;
     }
@@ -52,13 +53,13 @@ public static class OpenSsl
     // This inspired by https://gist.github.com/scottlowe/1411917/bdb474d03da42b6bd46e339ef03780f5301b14d7
     private static (byte[] key, byte[] iv) DeriveKeyAndIV(byte[] password, byte[] salt)
     {
-        var keyAndIvBytes = new List<byte>(KEY_SIZE + IV_SIZE);
+        var keyAndIvBytes = new List<byte>(COMBINED_KEY_AND_IV_LENGTH);
 
         var currentHash = Array.Empty<byte>();
 
         using var md5Hash = MD5.Create();
 
-        while (keyAndIvBytes.Count < (KEY_SIZE + IV_SIZE))
+        while (keyAndIvBytes.Count < COMBINED_KEY_AND_IV_LENGTH)
         {
             var preHashLength = currentHash.Length + password.Length + salt.Length;
             var preHash = new byte[preHashLength];
@@ -84,16 +85,10 @@ public static class OpenSsl
 
     private static Result<FileInfo> DecryptFile(FileInfo encryptedFile, byte[] key, byte[] iv, FileInfo outputFile)
     {
-        var aes = Aes.Create();
-
-        aes.Mode = CipherMode.CBC;
-        aes.KeySize = 256;
-        aes.BlockSize = 128;
-        aes.Key = key;
-        aes.IV = iv;
-        aes.Padding = PaddingMode.PKCS7;
+        var aes = CreateAes(key, iv);
 
         var couldOpenOutputFileForWrite = false;
+
         try
         {
             var decryptor = aes.CreateDecryptor();
@@ -129,5 +124,19 @@ public static class OpenSsl
             aes.Clear();
             aes.Dispose();
         }
+    }
+
+    private static Aes CreateAes(byte[] key, byte[] iv)
+    {
+        var aes = Aes.Create();
+
+        aes.Mode = CipherMode.CBC;
+        aes.KeySize = 256;
+        aes.BlockSize = 128;
+        aes.Key = key;
+        aes.IV = iv;
+        aes.Padding = PaddingMode.PKCS7;
+
+        return aes;
     }
 }

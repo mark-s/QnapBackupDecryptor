@@ -1,8 +1,8 @@
 ﻿namespace QnapBackupDecryptor.Core;
 
-public static class FileInfoExtensions
+internal static class FileInfoExtensions
 {
-    public static bool TryDelete(this FileInfo fileInfo)
+    internal static bool TryDelete(this FileInfo fileInfo)
     {
         try
         {

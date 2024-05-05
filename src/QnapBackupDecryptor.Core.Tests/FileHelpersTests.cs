@@ -1,7 +1,4 @@
-﻿using NUnit.Framework;
-using Shouldly;
-
-namespace QnapBackupDecryptor.Core.Tests;
+﻿namespace QnapBackupDecryptor.Core.Tests;
 
 [TestFixture]
 public class FileHelpersTests
