@@ -29,4 +29,5 @@ jobs:
         run: dotnet build
 
       - name: Execute unit tests
+        working-directory: src
         run: dotnet test
