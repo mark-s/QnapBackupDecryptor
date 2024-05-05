@@ -13,28 +13,20 @@ jobs:
       DOTNET_NOLOGO: true
 
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v1
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          dotnet-version: 6.x
+          fetch-depth: 0
+
+      # Install the .NET Core workload
+      - name: Install .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 6.0.x
 
       - name: Build
         working-directory: src
         run: dotnet build
 
-      - name: Test
-        working-directory: src
-        run: 'dotnet test --no-build --verbosity normal --test-adapter-path:. --logger:"junit;LogFilePath=../artifacts/{assembly}-test-result.xml;MethodFormat=Class;FailureBodyFormat=Verbose"'
-
-      - name: Publish Unit Test Results
-        uses: zyborg/dotnet-tests-report@v1.3.0
-        with:
-          project_path: ./src/QnapBackupDecryptor.Core.Tests
-          report_name: QnapBackupDecryptor.Core.Tests
-          report_title: QnapBackupDecryptor.Core.Tests
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          gist_name: QnapBackupDecryptor.Core.Tests.md
-          gist_badge_label: "QnapBackupDecryptor.Core: %Counters_passed%/%Counters_total%"
-          gist_token: ${{ secrets.GIST_TOKEN }}
+      - name: Execute unit tests
+        run: dotnet test
