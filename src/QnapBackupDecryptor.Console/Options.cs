@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using CommandLine;
+﻿using CommandLine;
 using CommandLine.Text;
 
 namespace QnapBackupDecryptor.Console;
