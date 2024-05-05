@@ -1,12 +1,11 @@
 ﻿using QnapBackupDecryptor.Core;
 using Spectre.Console;
-using System.Collections.Concurrent;
 
 namespace QnapBackupDecryptor.Console;
 
-internal class Output
+internal static class Output
 {
-    public static void ShowResults(ConcurrentBag<DecryptResult> decryptResults, ConcurrentBag<DeleteResult> deleteResults, bool verbose, TimeSpan swElapsed)
+    public static void ShowResults(IReadOnlyList<DecryptResult> decryptResults, IReadOnlyList<DeleteResult> deleteResults, bool verbose, TimeSpan swElapsed)
     {
         if (verbose && decryptResults.Count > 1)
         {
@@ -25,7 +24,7 @@ internal class Output
             Environment.ExitCode = 1;
     }
 
-    private static void ShowSimpleResults(ConcurrentBag<DecryptResult> decryptResults, ConcurrentBag<DeleteResult> deleteResults)
+    private static void ShowSimpleResults(IReadOnlyList<DecryptResult> decryptResults, IReadOnlyList<DeleteResult> deleteResults)
     {
         var table = new Table();
         table
@@ -46,7 +45,7 @@ internal class Output
         AnsiConsole.Write(table);
     }
 
-    private static void ShowFileListResults(ConcurrentBag<DecryptResult> decryptResults, ConcurrentBag<DeleteResult> deleteResults)
+    private static void ShowFileListResults(IReadOnlyList<DecryptResult> decryptResults, IReadOnlyList<DeleteResult> deleteResults)
     {
         var table = new Table();
         table
@@ -98,10 +97,10 @@ internal class Output
         return row;
     }
 
-    private static List<string> DeleteResultToRow(DeleteResult deleteResult)
+    private static IEnumerable<string> DeleteResultToRow(DeleteResult? deleteResult)
     {
         if (deleteResult == null)
-            return new List<string>(0);
+            return [];
 
         var colour = deleteResult.DeletedOk ? "green" : "red";
         var status = deleteResult.DeletedOk ? "Deleted" : "Failed";
@@ -131,11 +130,10 @@ internal class Output
     }
 
     public static ProgressColumn[] GetProgressColumns()
-        => new ProgressColumn[]
-        {
+        => [
             new TaskDescriptionColumn(),
             new ProgressBarColumn(),
             new PercentageColumn(),
-            new SpinnerColumn(Spinner.Known.SimpleDots),
-        };
+            new SpinnerColumn(Spinner.Known.SimpleDots)
+        ];
 }

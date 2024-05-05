@@ -27,7 +27,11 @@ class Program
 
         var decryptJobs = GetDecryptJobs(options);
 
-        DoDecrypt(decryptJobs, options, password, stopwatch);
+        var (decryptResults, deleteResults) = DoDecrypt(decryptJobs, options, password);
+
+        stopwatch.Stop();
+
+        Output.ShowResults(decryptResults, deleteResults, options.Verbose, stopwatch.Elapsed);
     }
 
     private static IReadOnlyList<FileJob> GetDecryptJobs(Options options)
@@ -41,17 +45,22 @@ class Program
                 statusContext.Spinner(Spinner.Known.SimpleDots);
                 statusContext.SpinnerStyle(Style.Parse("green"));
 
-                decryptJobs = JobMaker.GetDecryptJobs(options.EncryptedSource, options.OutputDestination, options.Overwrite, options.IncludeSubfolders);
+                decryptJobs.AddRange(
+                    JobMaker.GetDecryptJobs(
+                        encryptedSource: options.EncryptedSource,
+                        decryptedTarget: options.OutputDestination,
+                        overwrite: options.Overwrite,
+                        includeSubFolders: options.IncludeSubfolders)
+                    );
             });
 
         return decryptJobs;
     }
 
-    private static void DoDecrypt(IReadOnlyList<FileJob> decryptJobs, Options options, byte[] password, Stopwatch sw)
+    private static (IReadOnlyList<DecryptResult> DecryptResults, IReadOnlyList<DeleteResult> DeleteResults) DoDecrypt(IReadOnlyCollection<FileJob> decryptJobs, Options options, byte[] password)
     {
         var decryptResults = new ConcurrentBag<DecryptResult>();
         var deleteResults = new ConcurrentBag<DeleteResult>();
-
 
         AnsiConsole.Progress()
             .Columns(Output.GetProgressColumns())
@@ -61,13 +70,12 @@ class Program
                 var progressTask = progressContext.AddTask("[green]Decrypting Files[/]");
                 progressTask.MaxValue = decryptJobs.Count;
 
-                Parallel.ForEach(decryptJobs, currentJob => DecryptSingleJob(options, password, currentJob, decryptResults, deleteResults, progressTask));
-
+                Parallel.ForEach(
+                    decryptJobs, 
+                    currentJob => DecryptSingleJob(options, password, currentJob, decryptResults, deleteResults, progressTask));
             });
 
-        sw.Stop();
-
-        Output.ShowResults(decryptResults, deleteResults, options.Verbose, sw.Elapsed);
+        return (decryptResults.ToList(), deleteResults.ToList());
 
     }
 

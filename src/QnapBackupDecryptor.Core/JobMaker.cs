@@ -43,13 +43,13 @@ public static class JobMaker
         return new FileJob(encrytedFile, outputFile, true, string.Empty);
     }
 
-    private static FileJob GetFileToFolderJob(FileInfo encrytedFile, DirectoryInfo outputFolder, bool overwrite)
+    private static FileJob GetFileToFolderJob(FileInfo encrytedFile, FileSystemInfo outputFolder, bool overwrite)
     {
         var outputFile = new FileInfo(Path.Combine(outputFolder.FullName, encrytedFile.Name));
         return GetFileToFileJob(encrytedFile, outputFile, overwrite);
     }
 
-    private static List<FileJob> GetFolderToFolderJobs(DirectoryInfo encrytedFolder, DirectoryInfo outputFolder, bool overwrite, bool includeSubfolders)
+    private static List<FileJob> GetFolderToFolderJobs(DirectoryInfo encrytedFolder, FileSystemInfo outputFolder, bool overwrite, bool includeSubfolders)
     {
         if (encrytedFolder.Exists == false)
             return new FileJob(encrytedFolder, outputFolder, false, "Encrypted folder doesn't exist").ToList();

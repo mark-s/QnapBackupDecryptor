@@ -1,3 +1,3 @@
 ﻿namespace QnapBackupDecryptor.Core;
 
-public record DeleteResult(FileSystemInfo ToDelete, bool DeletedOk, string ErrorMessage);
+public sealed record DeleteResult(FileSystemInfo ToDelete, bool DeletedOk, string ErrorMessage);
