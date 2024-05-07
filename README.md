@@ -15,8 +15,8 @@ This tool is an alternative to the [QENC Decrypter](https://www.qnap.com/en-uk/u
 
 Binaries for Windows, Linux and Mac, are available in [Releases](https://github.com/mark-s/QnapBackupDecryptor/releases).
 
-The QnapBackupDecryptor-FD files are *Framework dependent* and require an install of .NET 6 to be installed on the system. Available from [here](https://dotnet.microsoft.com/download/dotnet/6.0).
-If installing .NET is not an option, the QnapBackupDecryptor-SC files are larger, but do not require a .NET 6 install.
+The QnapBackupDecryptor-FD files are *Framework dependent* and require an install of .NET 8 to be installed on the system. Available from [here](https://dotnet.microsoft.com/download/dotnet/8.0).
+If installing .NET is not an option, the QnapBackupDecryptor-SC files are larger, but do not require a .NET 8 install.
 
 ## Quickstart
 
