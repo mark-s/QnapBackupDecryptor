@@ -4,7 +4,7 @@ name: ReleaseAll
 #   release:
 #     types: [published]
 
-
+on: workflow_dispatch
 
 jobs:
   release:
@@ -41,7 +41,7 @@ jobs:
         shell: bash
         working-directory: src
         run: |
-          tag=0.0.0
+          tag="0.0.0"
           #$(git describe --tags --abbrev=0)
           release_name="QnapBackupDecryptor-FD-$tag-${{ matrix.target }}"
           workspace="${${{ github.workspace }}//\\//}"   
@@ -72,7 +72,7 @@ jobs:
         shell: bash
         working-directory: src
         run: |
-          tag=0.0.0
+          tag="0.0.0"
           #$(git describe --tags --abbrev=0)
           release_name="QnapBackupDecryptor-SC-$tag-${{ matrix.target }}"
 
