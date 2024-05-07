@@ -1,5 +1,6 @@
 ﻿using CommandLine;
 using QnapBackupDecryptor.Core;
+using QnapBackupDecryptor.Core.Models;
 using Spectre.Console;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -21,6 +22,10 @@ class Program
         if (Prompts.EnsureDeleteWanted(options) == false)
             return;
 
+        // Double check in-place change is wanted
+        if (Prompts.EnsureInPlaceWanted(options) == false)
+            return;
+
         var password = Prompts.GetPassword(options);
 
         var stopwatch = Stopwatch.StartNew();
@@ -36,28 +41,23 @@ class Program
 
     private static IReadOnlyList<FileJob> GetDecryptJobs(Options options)
     {
-        var decryptJobs = new List<FileJob>();
-
-        // get file list to process
-        AnsiConsole.Status()
+        return AnsiConsole
+            .Status()
             .Start("Getting Files...", statusContext =>
             {
                 statusContext.Spinner(Spinner.Known.SimpleDots);
                 statusContext.SpinnerStyle(Style.Parse("green"));
 
-                decryptJobs.AddRange(
-                    JobMaker.GetDecryptJobs(
+                return JobMaker.GetDecryptJobs(
                         encryptedSource: options.EncryptedSource,
                         decryptedTarget: options.OutputDestination,
                         overwrite: options.Overwrite,
-                        includeSubFolders: options.IncludeSubfolders)
-                    );
+                        includeSubFolders: options.IncludeSubfolders);
             });
-
-        return decryptJobs;
     }
 
-    private static (IReadOnlyList<DecryptResult> DecryptResults, IReadOnlyList<DeleteResult> DeleteResults) DoDecrypt(IReadOnlyCollection<FileJob> decryptJobs, Options options, byte[] password)
+    private static (IReadOnlyList<DecryptResult> DecryptResults, IReadOnlyList<DeleteResult> DeleteResults)
+        DoDecrypt(IReadOnlyCollection<FileJob> decryptJobs, Options options, byte[] password)
     {
         var decryptResults = new ConcurrentBag<DecryptResult>();
         var deleteResults = new ConcurrentBag<DeleteResult>();
@@ -70,32 +70,18 @@ class Program
                 var progressTask = progressContext.AddTask("[green]Decrypting Files[/]");
                 progressTask.MaxValue = decryptJobs.Count;
 
-                Parallel.ForEach(
-                    decryptJobs, 
-                    currentJob => DecryptSingleJob(options, password, currentJob, decryptResults, deleteResults, progressTask));
+                Parallel.ForEach(decryptJobs, job =>
+                    {
+                        var (decryptResult, deleteResult) = DecryptorService.Decrypt(options.RemoveEncrypted, password, job, progressTask.Increment);
+                        decryptResults.Add(decryptResult);
+                        if (deleteResult != null)
+                            deleteResults.Add(deleteResult);
+                    });
+
             });
 
         return (decryptResults.ToList(), deleteResults.ToList());
 
     }
 
-    private static void DecryptSingleJob(
-        Options options, byte[] password, FileJob currentJob, ConcurrentBag<DecryptResult> decryptResults,
-        ConcurrentBag<DeleteResult> deleteResults, ProgressTask progressTask)
-    {
-        if (currentJob.IsValid)
-        {
-            var decryptionResult = OpenSsl.Decrypt(new FileInfo(currentJob.EncryptedFile.FullName), password, new FileInfo(currentJob.OutputFile.FullName));
-
-            decryptResults.Add(new DecryptResult(currentJob.EncryptedFile, currentJob.OutputFile, decryptionResult.IsSuccess, decryptionResult.ErrorMessage));
-
-            // Delete encrypted file only if success and option chosen
-            if (decryptionResult.IsSuccess && options.RemoveEncrypted)
-                deleteResults.Add(FileService.TryDelete(currentJob.EncryptedFile));
-        }
-        else
-            decryptResults.Add(new DecryptResult(currentJob.EncryptedFile, currentJob.OutputFile, currentJob.IsValid, currentJob.ErrorMessage));
-
-        progressTask.Increment(decryptResults.Count);
-    }
 }

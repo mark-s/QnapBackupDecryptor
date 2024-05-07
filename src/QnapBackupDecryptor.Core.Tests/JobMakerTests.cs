@@ -81,5 +81,4 @@ public class JobMakerTests
         result[0].IsValid.ShouldBeFalse();
         result[0].ErrorMessage.ShouldBe("Output file already exists, use --overwrite to overwrite files.");
     }
-
 }

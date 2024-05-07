@@ -1,4 +1,6 @@
-﻿namespace QnapBackupDecryptor.Core;
+﻿using QnapBackupDecryptor.Core.Models;
+
+namespace QnapBackupDecryptor.Core;
 
 public static class FileService
 {
@@ -14,5 +16,4 @@ public static class FileService
             return new DeleteResult(toDelete, false, ex.Message);
         }
     }
-
 }

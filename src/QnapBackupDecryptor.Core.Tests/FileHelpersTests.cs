@@ -38,5 +38,4 @@ public class FileHelpersTests
         // Assert
         result.Data.ShouldBeFalse();
     }
-
 }

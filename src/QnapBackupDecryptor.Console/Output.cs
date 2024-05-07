@@ -1,4 +1,4 @@
-﻿using QnapBackupDecryptor.Core;
+﻿using QnapBackupDecryptor.Core.Models;
 using Spectre.Console;
 
 namespace QnapBackupDecryptor.Console;
@@ -20,7 +20,7 @@ internal static class Output
 
         ShowTiming(swElapsed);
 
-        if (decryptResults.Any(r => r.Success == false) || deleteResults.Any(r => r.DeletedOk == false))
+        if (decryptResults.Any(r => r.DecryptedOk == false) || deleteResults.Any(r => r.DeletedOk == false))
             Environment.ExitCode = 1;
     }
 
@@ -36,8 +36,8 @@ internal static class Output
 
         table.AddRow(
             $"{decryptResults.Count}",
-            $"[green]{decryptResults.Count(r => r.Success)}[/]",
-            $"[red]{decryptResults.Count(r => !r.Success)}[/]",
+            $"[green]{decryptResults.Count(r => r.DecryptedOk)}[/]",
+            $"[red]{decryptResults.Count(r => !r.DecryptedOk)}[/]",
             $"[green]{deleteResults.Count(r => r.DeletedOk)}[/]",
             $"[red]{deleteResults.Count(r => !r.DeletedOk)}[/]"
         );
@@ -53,7 +53,7 @@ internal static class Output
             .AddColumn("Encrypted")
             .AddColumn("Decrypted");
 
-        if (decryptResults.Any(r => r.Success == false))
+        if (decryptResults.Any(r => r.DecryptedOk == false))
             table.AddColumn("Error");
 
         if (deleteResults.Any())
@@ -81,8 +81,8 @@ internal static class Output
 
     private static List<string> DecryptResultToRow(DecryptResult decryptResult)
     {
-        var colour = decryptResult.Success ? "green" : "red";
-        var status = decryptResult.Success ? "OK" : "Fail";
+        var colour = decryptResult.DecryptedOk ? "green" : "red";
+        var status = decryptResult.DecryptedOk ? "OK" : "Fail";
 
         var row = new List<string>
         {
@@ -91,7 +91,7 @@ internal static class Output
             $"[{colour}]{decryptResult.Dest.FullName}[/]"
         };
 
-        if (decryptResult.Success == false)
+        if (decryptResult.DecryptedOk == false)
             row.Add($"[{colour}]{decryptResult.ErrorMessage}[/]");
 
         return row;

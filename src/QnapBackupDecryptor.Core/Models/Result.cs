@@ -1,4 +1,4 @@
-﻿namespace QnapBackupDecryptor.Core;
+﻿namespace QnapBackupDecryptor.Core.Models;
 
 public class Result<T>
 {
@@ -10,7 +10,7 @@ public class Result<T>
 
     public T Data { get; }
 
-    internal Result(bool isSuccess, string errorMessage, T data, string successMessage, Exception? exception)
+    private Result(bool isSuccess, string errorMessage, T data, string successMessage, Exception? exception)
     {
         IsSuccess = isSuccess;
         ErrorMessage = errorMessage;

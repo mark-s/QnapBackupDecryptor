@@ -1,8 +1,10 @@
-﻿namespace QnapBackupDecryptor.Core;
+﻿using QnapBackupDecryptor.Core.Models;
+
+namespace QnapBackupDecryptor.Core;
 
 public static class JobMaker
 {
-    public static List<FileJob> GetDecryptJobs(string encryptedSource, string decryptedTarget, bool overwrite, bool includeSubFolders)
+    public static IReadOnlyList<FileJob> GetDecryptJobs(string encryptedSource, string decryptedTarget, bool overwrite, bool includeSubFolders)
     {
         if (Directory.Exists(encryptedSource) == false && File.Exists(encryptedSource) == false)
             return new FileJob(new DirectoryInfo(encryptedSource), new FileInfo(decryptedTarget), false, "Source does not exist").ToList();
@@ -24,7 +26,6 @@ public static class JobMaker
         else
             return GetFileToFileJob(new FileInfo(encryptedSource), new FileInfo(decryptedTarget), overwrite).ToList();
     }
-
 
     private static FileJob GetFileToFileJob(FileInfo encrytedFile, FileInfo outputFile, bool overwrite)
     {
@@ -63,7 +64,4 @@ public static class JobMaker
             .Select(encrytedFile => GetFileToFolderJob(encrytedFile, outputFolder, overwrite))
             .ToList();
     }
-
-
-
 }

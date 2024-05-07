@@ -3,16 +3,16 @@ using CommandLine.Text;
 
 namespace QnapBackupDecryptor.Console;
 
-internal class Options
+internal sealed class Options
 {
     [Option('p', "password", Required = false, HelpText = "Password")]
     public string? Password { get; init; }
 
     [Option('e', "encrypted", Required = true, HelpText = "Encrypted file or folder")]
-    public string EncryptedSource { get; init; } = null!;
+    public required string EncryptedSource { get; init; }
 
     [Option('d', "decrypted", Required = true, HelpText = "Where to place the decrypted file(s)")]
-    public string OutputDestination { get; init; } = null!;
+    public required string OutputDestination { get; init; }
 
     [Option('s', "subfolders", Required = false, HelpText = "Include Subfolders (default: false)")]
     public bool IncludeSubfolders { get; init; }
@@ -26,6 +26,8 @@ internal class Options
     [Option('r', "removeencrypted", Required = false, HelpText = "Delete encrypted files when decrypted (default: false)")]
     public bool RemoveEncrypted { get; init; }
 
+    [Option('i', "inplace", Required = false, HelpText = "Encrypt files in-place (default: false)")]
+    public bool InPlace { get; init; }
 
     [Usage(ApplicationAlias = "QnapBackupDecryptor")]
     // ReSharper disable once UnusedMember.Global // Used by the console
@@ -40,5 +42,4 @@ internal class Options
             yield return new Example("Decrypt a folder and all subfolders, and prompt for password", new Options { EncryptedSource = "./encryptedfolder", OutputDestination = "./decryptedfolder", IncludeSubfolders = true });
         }
     }
-
 }
