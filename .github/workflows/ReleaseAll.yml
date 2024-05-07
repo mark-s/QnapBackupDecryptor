@@ -4,7 +4,7 @@ name: ReleaseAll
 #   release:
 #     types: [published]
 
-on: workflow_dispatch
+
 
 jobs:
   release:
@@ -41,24 +41,26 @@ jobs:
         shell: bash
         working-directory: src
         run: |
-          tag=$(git describe --tags --abbrev=0)
+          tag=0.0.0
+          #$(git describe --tags --abbrev=0)
           release_name="QnapBackupDecryptor-FD-$tag-${{ matrix.target }}"
+          workspace="${${{ github.workspace }}//\\//}"   
 
           # Build everything
-          dotnet publish ./QnapBackupDecryptor.Console/QnapBackupDecryptor.Console.csproj  -c Release -f net8.0 -r ${{ matrix.target }} --self-contained false -p:PublishSingleFile=true -p:PublishDir="${{ github.workspace }}/releases/$release_name" -p:DebugType=None -p:DebugSymbols=false
+          dotnet publish ./QnapBackupDecryptor.Console/QnapBackupDecryptor.Console.csproj  -c Release -f net8.0 -r ${{ matrix.target }} --self-contained false -p:PublishSingleFile=true -p:PublishDir="${workspace}/releases/$release_name" -p:DebugType=None -p:DebugSymbols=false
 
           # Pack files
           if [ "${{ matrix.target }}" == "win-x64" ]; then
             # Pack to zip for Windows
-            mv ${{ github.workspace }}/releases/$release_name/QnapBackupDecryptor.Console.exe ${{ github.workspace }}/releases/$release_name/QnapBackupDecryptor.exe
-            7z a -tzip "../${release_name}.zip" "${{ github.workspace }}/releases/${release_name}/*"
+            mv ${workspace}/releases/$release_name/QnapBackupDecryptor.Console.exe ${workspace}/releases/$release_name/QnapBackupDecryptor.exe
+            7z a -tzip "../${release_name}.zip" "${workspace}/releases/${release_name}/*"
           else
-            mv ${{ github.workspace }}/releases/$release_name/QnapBackupDecryptor.Console ${{ github.workspace }}/releases/$release_name/QnapBackupDecryptor
-            tar czvf "../${release_name}.tar.gz" "${{ github.workspace }}/releases/$release_name"
+            mv ${workspace}/releases/$release_name/QnapBackupDecryptor.Console ${workspace}/releases/$release_name/QnapBackupDecryptor
+            tar czvf "../${release_name}.tar.gz" ${workspace}/releases/$release_name
           fi
 
           # Delete output directory
-          rm -r "${{ github.workspace }}/releases/$release_name"
+          rm -r "${workspace}/releases/$release_name"
       - name: Publish
         uses: softprops/action-gh-release@v2
         with:
@@ -70,7 +72,8 @@ jobs:
         shell: bash
         working-directory: src
         run: |
-          tag=$(git describe --tags --abbrev=0)
+          tag=0.0.0
+          #$(git describe --tags --abbrev=0)
           release_name="QnapBackupDecryptor-SC-$tag-${{ matrix.target }}"
 
           # Build everything
