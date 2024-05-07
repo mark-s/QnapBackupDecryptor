@@ -1,4 +1,5 @@
 ﻿using System.Security.Cryptography;
+using QnapBackupDecryptor.Core.Models;
 
 namespace QnapBackupDecryptor.Core;
 
@@ -83,20 +84,18 @@ public static class OpenSsl
 
     private static Result<FileInfo> DecryptFile(FileInfo encryptedFile, byte[] key, byte[] iv, FileInfo outputFile)
     {
-        var aes = CreateAes(key, iv);
-
         var couldOpenOutputFileForWrite = false;
+        var aes = CreateAes(key, iv);
 
         try
         {
-            var decryptor = aes.CreateDecryptor();
-
             using var encryptedFileStream = encryptedFile.OpenRead();
             encryptedFileStream.Position = SALT_HEADER_SIZE + SALT_SIZE;
 
             using var destination = outputFile.OpenWrite();
             couldOpenOutputFileForWrite = true;
 
+            var decryptor = aes.CreateDecryptor();
             using var cryptoStream = new CryptoStream(encryptedFileStream, decryptor, CryptoStreamMode.Read);
 
             FileHelpers.HideFile(outputFile);
@@ -109,9 +108,9 @@ public static class OpenSsl
         }
         catch (Exception ex)
         {
-            if(couldOpenOutputFileForWrite == false)
+            if (couldOpenOutputFileForWrite == false)
                 return Result<FileInfo>.ErrorResult("could not decrypt - could not write to output file", outputFile, ex);
-            
+
             if (outputFile.TryDelete())
                 return Result<FileInfo>.ErrorResult("could not decrypt", outputFile, ex);
             else

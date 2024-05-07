@@ -9,8 +9,6 @@ This tool is an alternative to the [QENC Decrypter](https://www.qnap.com/en-uk/u
 
 ![See it in action](https://raw.githubusercontent.com/mark-s/QnapBackupDecryptor/master/Images/ExampleDecrypt.gif)
 
-
-
 ## Installation
 
 Binaries for Windows, Linux and Mac, are available in [Releases](https://github.com/mark-s/QnapBackupDecryptor/releases).

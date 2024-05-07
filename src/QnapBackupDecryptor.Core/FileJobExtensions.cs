@@ -1,4 +1,6 @@
-﻿namespace QnapBackupDecryptor.Core;
+﻿using QnapBackupDecryptor.Core.Models;
+
+namespace QnapBackupDecryptor.Core;
 
 internal static class FileJobExtensions
 {

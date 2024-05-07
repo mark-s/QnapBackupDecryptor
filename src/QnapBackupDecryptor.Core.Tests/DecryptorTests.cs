@@ -22,7 +22,6 @@ public class DecryptorTests
         sslDecrypt.IsSuccess.ShouldBeTrue();
     }
 
-
     [Test]
     public void OpenSSLDecrypt_Text()
     {

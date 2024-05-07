@@ -6,6 +6,7 @@ internal static class FileInfoExtensions
     {
         try
         {
+            fileInfo.Refresh();
             if (fileInfo.Exists)
                 fileInfo.Delete();
 

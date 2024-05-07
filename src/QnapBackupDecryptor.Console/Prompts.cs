@@ -5,10 +5,14 @@ namespace QnapBackupDecryptor.Console;
 
 internal static class Prompts
 {
-    public static byte[] GetPassword(Options opts)
+    private const string YES = "y";
+    private const string NO = "n";
+    private const string INVALID_OPTION_ENTERED = "[yellow]That's not a valid option[/]";
+
+    public static byte[] GetPassword(Options options)
     {
-        if (string.IsNullOrEmpty(opts.Password) == false)
-            return Encoding.UTF8.GetBytes(opts.Password);
+        if (string.IsNullOrEmpty(options.Password) == false)
+            return Encoding.UTF8.GetBytes(options.Password);
         else
         {
             var password = AnsiConsole.Prompt(
@@ -26,11 +30,34 @@ internal static class Prompts
 
         var response = AnsiConsole.Prompt(
             new TextPrompt<string>("[bold]>> Are you sure you want to delete the encrypted files?[/]")
-                .InvalidChoiceMessage("[yellow]That's not a valid option[/]")
-                .DefaultValue("n")
-                .AddChoice("y")
-                .AddChoice("n"));
+                .WithYesNoOptions(defaultOption: NO));
 
-        return response.Equals("y", StringComparison.InvariantCultureIgnoreCase);
+        return response.IsYes();
     }
+
+    public static bool EnsureInPlaceWanted(Options options)
+    {
+        if (options.InPlace == false)
+            return true;
+
+        var initialResponse = AnsiConsole.Prompt(
+            new TextPrompt<string>("[bold]>> Are you sure you want to decrypt the files in-place? If a decrypt produces a bad file - you will lose that file![/]")
+                .WithYesNoOptions(defaultOption: NO));
+
+        var areYouSureResponse = AnsiConsole.Prompt(
+            new TextPrompt<string>("[bold]>> Are you really sure? Do you have a backup in case anything goes wrong?[/]")
+                .WithYesNoOptions(defaultOption: NO));
+
+        return initialResponse.IsYes() && areYouSureResponse.IsYes();
+    }
+
+    private static TextPrompt<string> WithYesNoOptions(this TextPrompt<string> prompt, string defaultOption)
+        => prompt.InvalidChoiceMessage(INVALID_OPTION_ENTERED)
+            .DefaultValue(defaultOption)
+            .AddChoice(YES)
+            .AddChoice(NO);
+
+    private static bool IsYes(this string? value)
+        => value?.Equals(YES, StringComparison.OrdinalIgnoreCase) ?? false;
+
 }
