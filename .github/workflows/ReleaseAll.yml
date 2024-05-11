@@ -40,7 +40,7 @@ jobs:
           release_name="QnapBackupDecryptor-FD-$tag-${{ matrix.target }}"
 
           # Build everything
-          dotnet publish ./QnapBackupDecryptor.Console/QnapBackupDecryptor.Console.csproj  -c Release -f net8.0 -r ${{ matrix.target }} --self-contained false -p:PublishSingleFile=true -o "./releases/$release_name" -p:DebugType=None -p:DebugSymbols=false
+          dotnet publish ./QnapBackupDecryptor.Console/QnapBackupDecryptor.Console.csproj  -c Release -f net8.0 -r ${{ matrix.target }} --self-contained false -p:PublishSingleFile=true -o "./releases/$release_name" -p:DebugType=None -p:DebugSymbols=false -p:Version=${tag}
 
           # Pack files
           if [ "${{ matrix.target }}" == "win-x64" ]; then
@@ -70,7 +70,7 @@ jobs:
           release_name="QnapBackupDecryptor-SC-$tag-${{ matrix.target }}"
 
           # Build everything
-          dotnet publish QnapBackupDecryptor.sln -c Release -f net8.0 -r ${{ matrix.target }} --self-contained true -o "./releases/$release_name" -p:DebugType=None -p:DebugSymbols=false
+          dotnet publish QnapBackupDecryptor.sln -c Release -f net8.0 -r ${{ matrix.target }} --self-contained true -o "./releases/$release_name" -p:DebugType=None -p:DebugSymbols=false -p:Version=${tag}
 
           # Pack files
           if [ "${{ matrix.target }}" == "win-x64" ]; then
