@@ -4,64 +4,64 @@ namespace QnapBackupDecryptor.Core;
 
 public static class JobMaker
 {
-    public static IReadOnlyList<FileJob> GetDecryptJobs(string encryptedSource, string decryptedTarget, bool overwrite, bool includeSubFolders)
+    public static IReadOnlyList<DecryptJob> CreateDecryptJobs(string encryptedSource, string decryptedTarget, bool overwrite, bool includeSubFolders)
     {
         if (Directory.Exists(encryptedSource) == false && File.Exists(encryptedSource) == false)
-            return new FileJob(new DirectoryInfo(encryptedSource), new FileInfo(decryptedTarget), false, "Source does not exist").ToList();
+            return DecryptJob.Invalid(new DirectoryInfo(encryptedSource), new FileInfo(decryptedTarget), "Source does not exist").ToJobs();
 
-        var sourceIsFolder = File.GetAttributes(encryptedSource).HasFlag(FileAttributes.Directory);
-
-        bool destIsFolder = false;
-        if (Directory.Exists(decryptedTarget))
-            destIsFolder = File.GetAttributes(decryptedTarget).HasFlag(FileAttributes.Directory);
+        var sourceIsFolder = IsFolder(encryptedSource);
+        var destIsFolder = Directory.Exists(decryptedTarget) && IsFolder(decryptedTarget);
 
         if (sourceIsFolder & destIsFolder == false)
-            return new FileJob(new DirectoryInfo(encryptedSource), new FileInfo(decryptedTarget), false, "Cannot write an encrypted folder to a single file").ToList();
+            return DecryptJob.Invalid(new DirectoryInfo(encryptedSource), new FileInfo(decryptedTarget), "Cannot write an encrypted folder to a single file").ToJobs();
 
         if (sourceIsFolder & destIsFolder)
-            return GetFolderToFolderJobs(new DirectoryInfo(encryptedSource), new DirectoryInfo(decryptedTarget), overwrite, includeSubFolders);
+            return FolderToFolderJobs(new DirectoryInfo(encryptedSource), new DirectoryInfo(decryptedTarget), overwrite, includeSubFolders);
 
         if (destIsFolder)
-            return GetFileToFolderJob(new FileInfo(encryptedSource), new DirectoryInfo(decryptedTarget), overwrite).ToList();
+            return FileToFolderJob(new FileInfo(encryptedSource), new DirectoryInfo(decryptedTarget), overwrite).ToJobs();
         else
-            return GetFileToFileJob(new FileInfo(encryptedSource), new FileInfo(decryptedTarget), overwrite).ToList();
+            return FileToFileJob(new FileInfo(encryptedSource), new FileInfo(decryptedTarget), overwrite).ToJobs();
     }
 
-    private static FileJob GetFileToFileJob(FileInfo encrytedFile, FileInfo outputFile, bool overwrite)
+    private static DecryptJob FileToFileJob(FileInfo encryptedFile, FileInfo outputFile, bool overwrite)
     {
-        if (encrytedFile.Exists == false)
-            return new FileJob(encrytedFile, outputFile, false, "Encrypted file doesn't exist");
+        if (encryptedFile.Exists == false)
+            return DecryptJob.Invalid(encryptedFile, outputFile, "Encrypted file doesn't exist");
 
         if (outputFile.Exists & overwrite == false)
-            return new FileJob(encrytedFile, outputFile, false, "Output file already exists, use --overwrite to overwrite files.");
+            return DecryptJob.Invalid(encryptedFile, outputFile, "Output file already exists, use --overwrite to overwrite files.");
 
         if (outputFile.Exists & outputFile.Attributes.HasFlag(FileAttributes.ReadOnly))
-            return new FileJob(encrytedFile, outputFile, false, "Cannot write to output file - it's ReadOnly in the file system.");
+            return DecryptJob.Invalid(encryptedFile, outputFile, "Cannot write to output file - it's ReadOnly in the file system.");
 
-        if (OpenSsl.IsOpenSslEncrypted(encrytedFile) == false)
-            return new FileJob(encrytedFile, outputFile, false, "File is not encrypted with the OpenSSL method.");
+        if (OpenSsl.IsOpenSslEncrypted(encryptedFile) == false)
+            return DecryptJob.Invalid(encryptedFile, outputFile, "File is not encrypted with the OpenSSL method.");
 
-        return new FileJob(encrytedFile, outputFile, true, string.Empty);
+        return DecryptJob.Valid(encryptedFile, outputFile);
     }
 
-    private static FileJob GetFileToFolderJob(FileInfo encrytedFile, FileSystemInfo outputFolder, bool overwrite)
+    private static DecryptJob FileToFolderJob(FileInfo encryptedFile, FileSystemInfo outputFolder, bool overwrite)
     {
-        var outputFile = new FileInfo(Path.Combine(outputFolder.FullName, encrytedFile.Name));
-        return GetFileToFileJob(encrytedFile, outputFile, overwrite);
+        var outputFile = new FileInfo(Path.Combine(outputFolder.FullName, encryptedFile.Name));
+        return FileToFileJob(encryptedFile, outputFile, overwrite);
     }
 
-    private static List<FileJob> GetFolderToFolderJobs(DirectoryInfo encrytedFolder, FileSystemInfo outputFolder, bool overwrite, bool includeSubfolders)
+    private static IReadOnlyList<DecryptJob> FolderToFolderJobs(DirectoryInfo encryptedFolder, FileSystemInfo outputFolder, bool overwrite, bool includeSubfolders)
     {
-        if (encrytedFolder.Exists == false)
-            return new FileJob(encrytedFolder, outputFolder, false, "Encrypted folder doesn't exist").ToList();
+        if (encryptedFolder.Exists == false)
+            return DecryptJob.Invalid(encryptedFolder, outputFolder, "Encrypted folder doesn't exist").ToJobs();
 
         if (outputFolder.Exists & outputFolder.Attributes.HasFlag(FileAttributes.ReadOnly))
-            return new FileJob(encrytedFolder, outputFolder, false, "Cannot write to output folder - it's ReadOnly in the file system.").ToList();
+            return DecryptJob.Invalid(encryptedFolder, outputFolder, "Cannot write to output folder - it's ReadOnly in the file system.").ToJobs();
 
-        return encrytedFolder
+        return encryptedFolder
             .EnumerateFiles("*.*", includeSubfolders ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)
             .AsParallel()
-            .Select(encrytedFile => GetFileToFolderJob(encrytedFile, outputFolder, overwrite))
+            .Select(encrytedFile => FileToFolderJob(encrytedFile, outputFolder, overwrite))
             .ToList();
     }
+
+    private static bool IsFolder(string encryptedSource)
+        => File.GetAttributes(encryptedSource).HasFlag(FileAttributes.Directory);
 }

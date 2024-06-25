@@ -5,7 +5,7 @@ namespace QnapBackupDecryptor.Console;
 
 internal static class Output
 {
-    public static void ShowResults(IReadOnlyList<DecryptResult> decryptResults, IReadOnlyList<DeleteResult> deleteResults, bool verbose, TimeSpan swElapsed)
+    public static void ShowResults(IReadOnlyList<DecryptResult> decryptResults, IReadOnlyList<DeleteResult> deleteResults, bool verbose, TimeSpan elapsedTime)
     {
         if (verbose && decryptResults.Count > 1)
         {
@@ -18,7 +18,7 @@ internal static class Output
             AnsiConsole.MarkupLine("Add --verbose to see details.");
         }
 
-        ShowTiming(swElapsed);
+        ShowTiming(elapsedTime);
 
         if (decryptResults.Any(r => r.DecryptedOk == false) || deleteResults.Any(r => r.DeletedOk == false))
             Environment.ExitCode = 1;
@@ -63,7 +63,7 @@ internal static class Output
                 table.AddColumn("Error");
         }
 
-        var deleteResultsLookup = deleteResults.ToDictionary(r => r.ToDelete, r => r);
+        var deleteResultsLookup = deleteResults.ToDictionary(r => r.FileToDelete, r => r);
 
         foreach (var result in decryptResults)
         {
@@ -97,7 +97,7 @@ internal static class Output
         return row;
     }
 
-    private static IEnumerable<string> DeleteResultToRow(DeleteResult? deleteResult)
+    private static List<string> DeleteResultToRow(DeleteResult? deleteResult)
     {
         if (deleteResult == null)
             return [];

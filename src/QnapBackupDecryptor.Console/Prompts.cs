@@ -9,22 +9,21 @@ internal static class Prompts
     private const string NO = "n";
     private const string INVALID_OPTION_ENTERED = "[yellow]That's not a valid option[/]";
 
-    public static byte[] GetPassword(Options options)
+    public static byte[] GetPassword()
     {
-        if (string.IsNullOrEmpty(options.Password) == false)
-            return Encoding.UTF8.GetBytes(options.Password);
-        else
-        {
-            var password = AnsiConsole.Prompt(
-                new TextPrompt<string>("[bold]>> Enter password[/]")
-                    .PromptStyle("yellow")
-                    .Secret());
-            return Encoding.UTF8.GetBytes(password);
-        }
+        var password = AnsiConsole.Prompt(
+            new TextPrompt<string>("[bold]>> Enter password[/]")
+                .PromptStyle("yellow")
+                .Secret());
+
+        return Encoding.UTF8.GetBytes(password);
     }
 
     public static bool EnsureDeleteWanted(Options options)
     {
+        if (options.Silent)
+            return true;
+
         if (options.RemoveEncrypted == false)
             return true;
 
@@ -37,6 +36,9 @@ internal static class Prompts
 
     public static bool EnsureInPlaceWanted(Options options)
     {
+        if (options.Silent)
+            return true;
+
         if (options.InPlace == false)
             return true;
 

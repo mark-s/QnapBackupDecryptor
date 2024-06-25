@@ -4,6 +4,6 @@ namespace QnapBackupDecryptor.Core;
 
 internal static class FileJobExtensions
 {
-    internal static List<FileJob> ToList(this FileJob job)
+    internal static IReadOnlyList<DecryptJob> ToJobs(this DecryptJob job)
         => [job];
 }

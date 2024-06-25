@@ -9,7 +9,7 @@ public class JobMakerTests
     {
         // Arrange
         // Act 
-        var result = JobMaker.GetDecryptJobs("/somefolder1", "/somefolder2", false, false);
+        var result = JobMaker.CreateDecryptJobs("/somefolder1", "/somefolder2", false, false);
 
         // Assert
         result.Count.ShouldBe(1);
@@ -21,11 +21,11 @@ public class JobMakerTests
     public void GetDecryptJobs_TwoFolders_DestDoesntExist_ErrorAssumesFileOutput()
     {
         // Arrange
-        string path = Directory.GetCurrentDirectory();
-        string destPath = Path.Combine(path, "somefolder");
+        var path = Directory.GetCurrentDirectory();
+        var destPath = Path.Combine(path, "somefolder");
 
         // Act 
-        var result = JobMaker.GetDecryptJobs(path, destPath, false, false);
+        var result = JobMaker.CreateDecryptJobs(path, destPath, false, false);
 
         // Assert
         result.Count.ShouldBe(1);
@@ -41,7 +41,7 @@ public class JobMakerTests
         var decFile = Path.Combine("TestFiles", "dec.txt");
 
         // Act 
-        var result = JobMaker.GetDecryptJobs(encFile, decFile, false, false);
+        var result = JobMaker.CreateDecryptJobs(encFile, decFile, false, false);
 
         // Assert
         result.Count.ShouldBe(1);
@@ -58,7 +58,7 @@ public class JobMakerTests
         var decFile = Path.GetTempFileName();
 
         // Act 
-        var result = JobMaker.GetDecryptJobs(encFile, decFile, overwrite: true, false);
+        var result = JobMaker.CreateDecryptJobs(encFile, decFile, overwrite: true, false);
 
         // Assert
         result.Count.ShouldBe(1);
@@ -74,7 +74,7 @@ public class JobMakerTests
         var decFile = Path.GetTempFileName();
 
         // Act 
-        var result = JobMaker.GetDecryptJobs(encFile, decFile, overwrite: false, false);
+        var result = JobMaker.CreateDecryptJobs(encFile, decFile, overwrite: false, false);
 
         // Assert
         result.Count.ShouldBe(1);

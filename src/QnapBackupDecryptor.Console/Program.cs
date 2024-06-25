@@ -1,9 +1,10 @@
-﻿using CommandLine;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Text;
+using CommandLine;
 using QnapBackupDecryptor.Core;
 using QnapBackupDecryptor.Core.Models;
 using Spectre.Console;
-using System.Collections.Concurrent;
-using System.Diagnostics;
 
 namespace QnapBackupDecryptor.Console;
 
@@ -26,20 +27,27 @@ class Program
         if (Prompts.EnsureInPlaceWanted(options) == false)
             return;
 
-        var password = Prompts.GetPassword(options);
-
         var stopwatch = Stopwatch.StartNew();
 
+        // Decrypt Files
         var decryptJobs = GetDecryptJobs(options);
+        var decryptResults = Decrypt(decryptJobs, GetPassword(options));
 
-        var (decryptResults, deleteResults) = DoDecrypt(decryptJobs, options, password);
+        // Delete Files (if requested) 
+        var filesToDelete = GetFilesToDelete(decryptResults, options);
+        var deleteResults = Delete(filesToDelete);
 
         stopwatch.Stop();
 
         Output.ShowResults(decryptResults, deleteResults, options.Verbose, stopwatch.Elapsed);
     }
 
-    private static IReadOnlyList<FileJob> GetDecryptJobs(Options options)
+    private static byte[] GetPassword(Options options)
+        => string.IsNullOrEmpty(options.Password)
+            ? Prompts.GetPassword()
+            : Encoding.UTF8.GetBytes(options.Password);
+
+    private static IReadOnlyList<DecryptJob> GetDecryptJobs(Options options)
     {
         return AnsiConsole
             .Status()
@@ -48,19 +56,17 @@ class Program
                 statusContext.Spinner(Spinner.Known.SimpleDots);
                 statusContext.SpinnerStyle(Style.Parse("green"));
 
-                return JobMaker.GetDecryptJobs(
-                        encryptedSource: options.EncryptedSource,
-                        decryptedTarget: options.OutputDestination,
-                        overwrite: options.Overwrite,
-                        includeSubFolders: options.IncludeSubfolders);
+                return JobMaker.CreateDecryptJobs(
+                    encryptedSource: options.EncryptedSource,
+                    decryptedTarget: options.OutputDestination,
+                    overwrite: options.Overwrite,
+                    includeSubFolders: options.IncludeSubfolders);
             });
     }
 
-    private static (IReadOnlyList<DecryptResult> DecryptResults, IReadOnlyList<DeleteResult> DeleteResults)
-        DoDecrypt(IReadOnlyCollection<FileJob> decryptJobs, Options options, byte[] password)
+    private static IReadOnlyList<DecryptResult> Decrypt(IReadOnlyCollection<DecryptJob> decryptJobs, byte[] password)
     {
         var decryptResults = new ConcurrentBag<DecryptResult>();
-        var deleteResults = new ConcurrentBag<DeleteResult>();
 
         AnsiConsole.Progress()
             .Columns(Output.GetProgressColumns())
@@ -71,17 +77,49 @@ class Program
                 progressTask.MaxValue = decryptJobs.Count;
 
                 Parallel.ForEach(decryptJobs, job =>
-                    {
-                        var (decryptResult, deleteResult) = DecryptorService.Decrypt(options.RemoveEncrypted, password, job, progressTask.Increment);
-                        decryptResults.Add(decryptResult);
-                        if (deleteResult != null)
-                            deleteResults.Add(deleteResult);
-                    });
+                {
+                    var decryptResult = DecryptorService.TryDecrypt(password, job);
+                    decryptResults.Add(decryptResult);
+                    progressTask.Increment(1);
+                });
+            });
+
+        return decryptResults.ToList();
+    }
+
+    private static IReadOnlyList<FileSystemInfo> GetFilesToDelete(IReadOnlyList<DecryptResult> deleteResults, Options options)
+    {
+        if (options.RemoveEncrypted == false)
+            return [];
+
+        return deleteResults
+            .Where(r => r.DecryptedOk)
+            .Select(r => r.Source)
+            .ToList();
+    }
+
+    private static IReadOnlyList<DeleteResult> Delete(IReadOnlyList<FileSystemInfo> filesToDelete)
+    {
+        var deleteResults = new ConcurrentBag<DeleteResult>();
+
+        AnsiConsole.Progress()
+            .Columns(Output.GetProgressColumns())
+            .AutoClear(true)
+            .Start(progressContext =>
+            {
+                var progressTask = progressContext.AddTask("[yellow]Deleting Files\t[/]");
+                progressTask.MaxValue = filesToDelete.Count;
+
+                Parallel.ForEach(filesToDelete, job =>
+                {
+                    var deleteResult = FileService.TryDelete(job);
+                    deleteResults.Add(deleteResult);
+                    progressTask.Increment(1);
+                });
 
             });
 
-        return (decryptResults.ToList(), deleteResults.ToList());
-
+        return deleteResults.ToList();
     }
 
 }

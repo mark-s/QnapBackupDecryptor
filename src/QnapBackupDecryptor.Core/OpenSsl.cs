@@ -85,7 +85,7 @@ public static class OpenSsl
     private static Result<FileInfo> DecryptFile(FileInfo encryptedFile, byte[] key, byte[] iv, FileInfo outputFile)
     {
         var couldOpenOutputFileForWrite = false;
-        var aes = CreateAes(key, iv);
+        using var aes = CreateAes(key, iv);
 
         try
         {
@@ -116,11 +116,7 @@ public static class OpenSsl
             else
                 return Result<FileInfo>.ErrorResult("could not decrypt and failed to delete temp decrypt file.", outputFile, ex);
         }
-        finally
-        {
-            aes.Clear();
-            aes.Dispose();
-        }
+
     }
 
     private static Aes CreateAes(byte[] key, byte[] iv)

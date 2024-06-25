@@ -46,7 +46,7 @@ This is the same as the eample gif above.
 WARNING: This will delete the Encrypted files if they are successfully decrypted.
 Ensure you have backups as the files will not be recoverable!
 
-This will prompt for confirmation.
+This will prompt for confirmation (unless you specify -y / --silent)
 
 - Windows
 `QnapBackupDecryptor.exe -e c:\Files\Enc -d c:\Files\Dec --verbose --removeencrypted`
@@ -78,6 +78,7 @@ This will prompt for confirmation.
 |-r|--removeencrypted|Delete encrypted files (will prompt)|false|
 |-v|--verbose|Set output to verbose|false|
 |-o|--overwrite|Overwrite file(s) in output|false|
+|-y|--silent|Silent - 'Yes' to all confirmation prompts|false|
 | |--help|Display this help screen.||
 | |--version|Display version information.||
 

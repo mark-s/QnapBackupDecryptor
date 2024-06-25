@@ -1,6 +1,6 @@
 ﻿namespace QnapBackupDecryptor.Core.Models;
 
-public class Result<T>
+public sealed class Result<T>
 {
     public Exception? Exception { get; }
     public bool IsSuccess { get; }
