@@ -5,6 +5,7 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<IsPackable>false</IsPackable>
+		<IsPublishable>false</IsPublishable>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -42,6 +43,5 @@
 		<Using Include="Shouldly" />
 		<Using Include="NUnit.Framework" />
 	</ItemGroup>
-
 
 </Project>
