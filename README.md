@@ -25,21 +25,21 @@ This is the same as the eample gif above.
 - Windows
 `QnapBackupDecryptor.exe -e c:\Files\Enc -d c:\Files\Dec --verbose`
 - Linux
-`QnapBackupDecryptor.Console -e ./Files/Enc -d ./Files/Dec --verbose`
+`./QnapBackupDecryptor.Console -e ./Files/Enc -d ./Files/Dec --verbose`
 
 **Decrypt a Folder and see the complete list of files, but specify the password**
 
 - Windows
 `QnapBackupDecryptor.exe -e c:\Files\Enc -d c:\Files\Dec --verbose -p Pa$$w0rd`
 - Linux
-`QnapBackupDecryptor.Console -e ./Files/Enc -d ./Files/Dec --verbose -p Pa$$w0rd`
+`./QnapBackupDecryptor.Console -e ./Files/Enc -d ./Files/Dec --verbose -p Pa$$w0rd`
 
 **Decrypt a Folder and overwrite any duplicate files in the destination**
 
 - Windows
 `QnapBackupDecryptor.exe -e c:\Files\Enc -d c:\Files\Dec --verbose --overwrite`
 - Linux
-`QnapBackupDecryptor.Console -e ./Files/Enc -d ./Files/Dec --verbose --overwrite`
+`./QnapBackupDecryptor.Console -e ./Files/Enc -d ./Files/Dec --verbose --overwrite`
 
 **Decrypt a Folder and delete successfully decrypted source files**
 
@@ -51,21 +51,21 @@ This will prompt for confirmation (unless you specify -y / --silent)
 - Windows
 `QnapBackupDecryptor.exe -e c:\Files\Enc -d c:\Files\Dec --verbose --removeencrypted`
 - Linux
-`QnapBackupDecryptor.Console -e ./Files/Enc -d ./Files/Dec --verbose --removeencrypted`
+`./QnapBackupDecryptor.Console -e ./Files/Enc -d ./Files/Dec --verbose --removeencrypted`
 
 **Decrypt a single file to a folder**
 
 - Windows
 `QnapBackupDecryptor.exe -e c:\Files\Enc\Encrypted.jpg -d c:\Files\Dec --verbose`
 - Linux
-`QnapBackupDecryptor.Console -e ./Files/Enc/Encrypted.jpg -d ./Files/Dec --verbose`
+`./QnapBackupDecryptor.Console -e ./Files/Enc/Encrypted.jpg -d ./Files/Dec --verbose`
 
 **Decrypt a single file and specify the new name**
 
 - Windows
 `QnapBackupDecryptor.exe -e c:\Files\Enc\Encrypted.jpg -d c:\Files\Dec\Decrypted.jpg --verbose`
 - Linux
-`QnapBackupDecryptor.Console -e ./Files/Enc/Encrypted.jpg -d ./Files/Dec/Decrypted.jpg --verbose`
+`./QnapBackupDecryptor.Console -e ./Files/Enc/Encrypted.jpg -d ./Files/Dec/Decrypted.jpg --verbose`
 
 ## Available Options
 
