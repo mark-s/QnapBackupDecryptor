@@ -30,7 +30,7 @@ class Program
         var stopwatch = Stopwatch.StartNew();
 
         // Decrypt Files
-        var decryptJobs = GetDecryptJobs(options);
+        var decryptJobs = GetDecryptJobs(options).Where(j => j.IsValid).ToList();
         var decryptResults = Decrypt(decryptJobs, GetPassword(options));
 
         // Delete Files (if requested) 

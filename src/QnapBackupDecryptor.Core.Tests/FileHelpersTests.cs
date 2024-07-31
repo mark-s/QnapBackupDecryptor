@@ -7,7 +7,8 @@ public class FileHelpersTests
     public void IsOpenSslEncrypted_OpenSslFile_Binary_True()
     {
         // Arrange
-        var oseFile = new FileInfo(@"TestFiles/encrypted.jpg");
+        var oseFile = new FileInfo(Path.Combine("TestFiles", "encrypted.jpg"));
+
         // Act 
         var result = OpenSsl.IsOpenSslEncrypted(oseFile);
 
@@ -19,7 +20,8 @@ public class FileHelpersTests
     public void IsOpenSslEncrypted_OpenSslFile_Text_True()
     {
         // Arrange
-        var oseFile = new FileInfo(@"TestFiles/encrypted.txt");
+        var oseFile = new FileInfo(Path.Combine("TestFiles", "encrypted.txt"));
+        
         // Act 
         var result = OpenSsl.IsOpenSslEncrypted(oseFile);
 
@@ -31,7 +33,8 @@ public class FileHelpersTests
     public void IsOpenSslEncrypted_NotOpenSslFile_False()
     {
         // Arrange
-        var oseFile = new FileInfo(@"TestFiles/plaintext.txt");
+        var oseFile = new FileInfo(Path.Combine("TestFiles", "plaintext.txt"));
+
         // Act 
         var result = OpenSsl.IsOpenSslEncrypted(oseFile);
 
