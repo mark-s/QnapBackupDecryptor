@@ -135,7 +135,7 @@ public class OpenSslTests
             File.Delete(outputTempFile);
         }
     }
-    
+
     [Test]
     public void Decrypt_WithValidCredentials_DecryptsTextFile()
     {
@@ -154,7 +154,7 @@ public class OpenSslTests
             // Assert
             result.IsSuccess.ShouldBeTrue();
             outputFile.Exists.ShouldBeTrue();
-            
+
             var decryptedContent = File.ReadAllText(outputFile.FullName);
             decryptedContent.ShouldContain("line1: this is a plaintext file");
         }
@@ -165,7 +165,7 @@ public class OpenSslTests
                 outputFile.Delete();
         }
     }
-    
+
     [Test]
     public void Decrypt_WithInvalidPassword_ReturnsErrorResult()
     {
@@ -196,18 +196,18 @@ public class OpenSslTests
         // Arrange
         var password = _validPasswordBytes;
         var salt = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 }; // 8 bytes salt
-        
+
         // Access private method using reflection
-        var methodInfo = typeof(OpenSsl).GetMethod("DeriveKeyAndIV", 
+        var methodInfo = typeof(OpenSsl).GetMethod("DeriveKeyAndIV",
             BindingFlags.NonPublic | BindingFlags.Static);
-        
+
         // Act
         var result = methodInfo!.Invoke(null, [password, salt]);
-        
+
         // Assert
         result.ShouldBeOfType<ValueTuple<byte[], byte[]>>();
         var (key, iv) = ((byte[], byte[]))result;
-        
+
         key.ShouldNotBeNull();
         iv.ShouldNotBeNull();
         key.Length.ShouldBe(32); // KEY_SIZE
@@ -219,9 +219,9 @@ public class OpenSslTests
     {
         // Arrange
         var encryptedFile = new FileInfo(Path.Combine("TestFiles", "encrypted.txt"));
-        
+
         // Access private method using reflection
-        var methodInfo = typeof(OpenSsl).GetMethod("GetSalt", 
+        var methodInfo = typeof(OpenSsl).GetMethod("GetSalt",
             BindingFlags.NonPublic | BindingFlags.Static);
 
         // Act
@@ -239,9 +239,9 @@ public class OpenSslTests
         // Arrange
         var key = new byte[32]; // 32 bytes key
         var iv = new byte[16];  // 16 bytes IV
-        
+
         // Access private method using reflection
-        var methodInfo = typeof(OpenSsl).GetMethod("CreateAes", 
+        var methodInfo = typeof(OpenSsl).GetMethod("CreateAes",
             BindingFlags.NonPublic | BindingFlags.Static);
 
         // Act
