@@ -30,11 +30,19 @@ public static class OpenSsl
 
     public static Result<FileInfo> Decrypt(FileInfo encryptedFile, byte[] password, FileInfo outputFile)
     {
+        encryptedFile.Refresh();
+        if (encryptedFile.Exists == false)
+            return Result<FileInfo>.ErrorResult($"Encrypted file {outputFile.FullName} does not exist", outputFile);
+
+        // check encrypted file size is at least the size of the salt header and salt
+        if (encryptedFile.Length < SALT_HEADER_SIZE + SALT_SIZE)
+            return Result<FileInfo>.ErrorResult($"Encrypted file {outputFile.FullName} is too small to be encrypted", outputFile);
+
         var salt = GetSalt(encryptedFile);
 
         var (key, iv) = DeriveKeyAndIV(password, salt);
 
-        if (key == null || iv == null || salt == null)
+        if (key.Length == 0 || iv.Length == 0 || salt.Length == 0)
             return Result<FileInfo>.ErrorResult("Key / IV / Salt is invalid", outputFile);
 
         return DecryptFile(encryptedFile, key, iv, outputFile);
