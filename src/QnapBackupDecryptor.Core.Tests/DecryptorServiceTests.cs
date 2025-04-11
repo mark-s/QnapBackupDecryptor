@@ -7,8 +7,8 @@ namespace QnapBackupDecryptor.Core.Tests;
 public class DecryptorServiceTests
 {
     private const string TEST_PASSWORD = "testPassword123";
-    private FileInfo _encryptedFile;
-    private FileInfo _outputFile;
+    private FileInfo _encryptedFile = null!;
+    private FileInfo _outputFile = null!;
 
     [SetUp]
     public void Setup()
