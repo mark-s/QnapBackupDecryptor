@@ -58,7 +58,7 @@ public static class JobMaker
         return encryptedFolder
             .EnumerateFiles("*.*", includeSubfolders ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)
             .AsParallel()
-            .Select(encrytedFile => FileToFolderJob(encrytedFile, outputFolder, overwrite))
+            .Select(encryptedFile => FileToFolderJob(encryptedFile, outputFolder, overwrite))
             .ToList();
     }
 
