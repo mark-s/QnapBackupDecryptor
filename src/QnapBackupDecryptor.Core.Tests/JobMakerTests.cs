@@ -1,4 +1,6 @@
-﻿namespace QnapBackupDecryptor.Core.Tests;
+﻿using System.Linq;
+
+namespace QnapBackupDecryptor.Core.Tests;
 
 [TestFixture]
 public class JobMakerTests
@@ -179,14 +181,22 @@ public class JobMakerTests
     public void GetDecryptJobs_FolderToFolder_IncludeSubFoldersTrue_ProducesMultipleJobs()
     {
         // Arrange
-        var sourceDir = "TestFiles"; // Contains encrypted files
-        var tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-        Directory.CreateDirectory(tempDir);
+        List<string> testFileNames = ["encrypted.jpg", "encrypted.txt", "plaintext.txt"];
+        var tempDir1 = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        Directory.CreateDirectory(tempDir1);
+        foreach (var file in Directory.GetFiles("TestFiles", "*.*", SearchOption.TopDirectoryOnly).Where(x => testFileNames.Contains(x.Split(Path.DirectorySeparatorChar).Last())))
+        {
+            var destFile = Path.Combine(tempDir1, Path.GetFileName(file));
+            File.Copy(file, destFile);
+        }
+
+        var tempDir2 = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        Directory.CreateDirectory(tempDir2);
 
         try
         {
             // Act 
-            var result = JobMaker.CreateDecryptJobs(sourceDir, tempDir, false, true);
+            var result = JobMaker.CreateDecryptJobs(tempDir1, tempDir2, false, true);
 
             // Assert
             result.Count.ShouldBe(3);
@@ -196,7 +206,7 @@ public class JobMakerTests
         finally
         {
             // Cleanup
-            Directory.Delete(tempDir, true);
+            Directory.Delete(tempDir2, true);
         }
     }
 

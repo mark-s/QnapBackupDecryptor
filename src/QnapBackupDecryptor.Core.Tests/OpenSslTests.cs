@@ -300,7 +300,7 @@ public class OpenSslTests
         if (!Directory.Exists("TestFiles"))
             Directory.CreateDirectory("TestFiles");
         
-        File.WriteAllBytes(sourceFile.FullName, new byte[] { 0x00, 0x01, 0x02, 0x03, 0x04 });
+        File.WriteAllBytes(sourceFile.FullName, [0x00, 0x01, 0x02, 0x03, 0x04]);
 
         try
         {
