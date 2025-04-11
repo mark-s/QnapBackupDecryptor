@@ -257,4 +257,263 @@ public class OpenSslTests
         aes.Padding.ShouldBe(PaddingMode.PKCS7);
     }
 
+    [Test]
+    public void Encrypt_WithValidTextFile_CreatesEncryptedFile()
+    {
+        // Arrange
+        var sourceFile = new FileInfo(Path.Combine("TestFiles", "plaintext.txt"));
+        var outputFile = new FileInfo(Path.Combine(Path.GetTempPath(), "encrypted.txt"));
+
+        if (!Directory.Exists("TestFiles"))
+            Directory.CreateDirectory("TestFiles");
+        
+        File.WriteAllText(sourceFile.FullName, "Test content\nSecond line");
+
+        try
+        {
+            // Act
+            var result = OpenSsl.Encrypt(sourceFile, _validPasswordBytes, outputFile);
+
+            // Assert
+            result.IsSuccess.ShouldBeTrue();
+            outputFile.Exists.ShouldBeTrue();
+            outputFile.Length.ShouldBeGreaterThan(16); // At least header + salt
+
+            var isEncrypted = OpenSsl.IsOpenSslEncrypted(outputFile);
+            isEncrypted.Data.ShouldBeTrue();
+        }
+        finally
+        {
+            // Cleanup
+            if (outputFile.Exists) outputFile.Delete();
+            if (sourceFile.Exists) sourceFile.Delete();
+        }
+    }
+
+    [Test]
+    public void Encrypt_WithBinaryFile_CreatesEncryptedFile()
+    {
+        // Arrange
+        var sourceFile = new FileInfo(Path.Combine("TestFiles", "sample.bin"));
+        var outputFile = new FileInfo(Path.Combine(Path.GetTempPath(), "encrypted.bin"));
+
+        if (!Directory.Exists("TestFiles"))
+            Directory.CreateDirectory("TestFiles");
+        
+        File.WriteAllBytes(sourceFile.FullName, new byte[] { 0x00, 0x01, 0x02, 0x03, 0x04 });
+
+        try
+        {
+            // Act
+            var result = OpenSsl.Encrypt(sourceFile, _validPasswordBytes, outputFile);
+
+            // Assert
+            result.IsSuccess.ShouldBeTrue();
+            outputFile.Exists.ShouldBeTrue();
+        
+            var isEncrypted = OpenSsl.IsOpenSslEncrypted(outputFile);
+            isEncrypted.Data.ShouldBeTrue();
+        }
+        finally
+        {
+            // Cleanup
+            if (outputFile.Exists) outputFile.Delete();
+            if (sourceFile.Exists) sourceFile.Delete();
+        }
+    }
+
+    [Test]
+    public void Encrypt_WithInvalidOutputPath_ReturnsErrorResult()
+    {
+        // Arrange
+        var sourceFile = new FileInfo(Path.Combine("TestFiles", "plaintext.txt"));
+        var outputFile = new FileInfo(Path.Combine("NonExistentFolder", "encrypted.txt"));
+
+        File.WriteAllText(sourceFile.FullName, "Test content");
+
+        try
+        {
+            // Act
+            var result = OpenSsl.Encrypt(sourceFile, _validPasswordBytes, outputFile);
+
+            // Assert
+            result.IsError.ShouldBeTrue();
+            outputFile.Exists.ShouldBeFalse();
+        }
+        finally
+        {
+            // Cleanup
+            if (sourceFile.Exists) sourceFile.Delete();
+        }
+    }
+
+    [Test]
+    public void Encrypt_WithEmptyFile_CreatesValidEncryptedFile()
+    {
+        // Arrange
+        var sourceFile = new FileInfo(Path.Combine("TestFiles", "empty.txt"));
+        var outputFile = new FileInfo(Path.Combine(Path.GetTempPath(), "encrypted-empty.txt"));
+
+        File.WriteAllText(sourceFile.FullName, "");
+
+        try
+        {
+            // Act
+            var result = OpenSsl.Encrypt(sourceFile, _validPasswordBytes, outputFile);
+
+            // Assert
+            result.IsSuccess.ShouldBeTrue();
+            outputFile.Exists.ShouldBeTrue();
+        
+            var isEncrypted = OpenSsl.IsOpenSslEncrypted(outputFile);
+            isEncrypted.Data.ShouldBeTrue();
+        }
+        finally
+        {
+            // Cleanup
+            if (outputFile.Exists) outputFile.Delete();
+            if (sourceFile.Exists) sourceFile.Delete();
+        }
+    }
+
+    [Test]
+    public void Encrypt_WithNonExistentFile_ReturnsErrorResult()
+    {
+        // Arrange
+        var sourceFile = new FileInfo(Path.Combine(Path.GetTempPath(), "nonexistent.txt"));
+        var outputFile = new FileInfo(Path.Combine(Path.GetTempPath(), "encrypted.txt"));
+
+        // Act
+        var result = OpenSsl.Encrypt(sourceFile, _validPasswordBytes, outputFile);
+
+        // Assert
+        result.IsError.ShouldBeTrue();
+        outputFile.Exists.ShouldBeFalse();
+    }
+
+    [Test]
+    public void IsOpenSslEncrypted_WithValidEncryptedFile_ReturnsTrue()
+    {
+        // Arrange
+        var encryptedFile = new FileInfo(Path.Combine("TestFiles", "encrypted.txt"));
+
+        // Act
+        var result = OpenSsl.IsOpenSslEncrypted(encryptedFile);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        result.Data.ShouldBeTrue();
+    }
+
+    [Test]
+    public void EncryptAndDecrypt_WithTextFile_PreservesContent()
+    {
+        // Arrange
+        var originalContent = "Test content\nWith multiple lines\nAnd some special chars: !@#$%";
+        var sourceFile = new FileInfo(Path.Combine(Path.GetTempPath(), "original.txt"));
+        var encryptedFile = new FileInfo(Path.Combine(Path.GetTempPath(), "encrypted.txt"));
+        var decryptedFile = new FileInfo(Path.Combine(Path.GetTempPath(), "decrypted.txt"));
+
+        File.WriteAllText(sourceFile.FullName, originalContent);
+
+        try
+        {
+            // Act
+            var encryptResult = OpenSsl.Encrypt(sourceFile, _validPasswordBytes, encryptedFile);
+            var decryptResult = OpenSsl.Decrypt(encryptedFile, _validPasswordBytes, decryptedFile);
+
+            // Assert
+            encryptResult.IsSuccess.ShouldBeTrue();
+            decryptResult.IsSuccess.ShouldBeTrue();
+        
+            var decryptedContent = File.ReadAllText(decryptedFile.FullName);
+            decryptedContent.ShouldBe(originalContent);
+        }
+        finally
+        {
+            // Cleanup
+            if (sourceFile.Exists) sourceFile.Delete();
+            if (encryptedFile.Exists) encryptedFile.Delete();
+            if (decryptedFile.Exists) decryptedFile.Delete();
+        }
+    }
+
+    [Test]
+    public void EncryptAndDecrypt_WithLargeFile_WorksCorrectly()
+    {
+        // Arrange
+        var sourceFile = new FileInfo(Path.Combine(Path.GetTempPath(), "large.dat"));
+        var encryptedFile = new FileInfo(Path.Combine(Path.GetTempPath(), "large.encrypted"));
+        var decryptedFile = new FileInfo(Path.Combine(Path.GetTempPath(), "large.decrypted"));
+    
+        // Create 1MB file
+        using (var fs = sourceFile.Create())
+        {
+            fs.SetLength(1024 * 1024);
+        }
+
+        try
+        {
+            // Act
+            var encryptResult = OpenSsl.Encrypt(sourceFile, _validPasswordBytes, encryptedFile);
+            var decryptResult = OpenSsl.Decrypt(encryptedFile, _validPasswordBytes, decryptedFile);
+
+            // Assert
+            encryptResult.IsSuccess.ShouldBeTrue();
+            decryptResult.IsSuccess.ShouldBeTrue();
+        
+            sourceFile.Length.ShouldBe(decryptedFile.Length);
+        }
+        finally
+        {
+            // Cleanup
+            if (sourceFile.Exists) sourceFile.Delete();
+            if (encryptedFile.Exists) encryptedFile.Delete();
+            if (decryptedFile.Exists) decryptedFile.Delete();
+        }
+    }
+
+    [Test]
+    public void EncryptAndDecrypt_WithDifferentPasswordLengths_WorksCorrectly()
+    {
+        // Arrange
+        var content = "Test content";
+        var sourceFile = new FileInfo(Path.Combine(Path.GetTempPath(), "original.txt"));
+        var encryptedFile = new FileInfo(Path.Combine(Path.GetTempPath(), "encrypted.txt"));
+        var decryptedFile = new FileInfo(Path.Combine(Path.GetTempPath(), "decrypted.txt"));
+
+        File.WriteAllText(sourceFile.FullName, content);
+        var shortPassword = "short"u8.ToArray();
+        var longPassword = "ThisIsAVeryLongPasswordThatShouldStillWork!!!"u8.ToArray();
+
+        try
+        {
+            // Act & Assert - Short password
+            var encryptResult1 = OpenSsl.Encrypt(sourceFile, shortPassword, encryptedFile);
+            var decryptResult1 = OpenSsl.Decrypt(encryptedFile, shortPassword, decryptedFile);
+        
+            encryptResult1.IsSuccess.ShouldBeTrue();
+            decryptResult1.IsSuccess.ShouldBeTrue();
+            File.ReadAllText(decryptedFile.FullName).ShouldBe(content);
+
+            // Cleanup between tests
+            encryptedFile.Delete();
+            decryptedFile.Delete();
+
+            // Act & Assert - Long password
+            var encryptResult2 = OpenSsl.Encrypt(sourceFile, longPassword, encryptedFile);
+            var decryptResult2 = OpenSsl.Decrypt(encryptedFile, longPassword, decryptedFile);
+        
+            encryptResult2.IsSuccess.ShouldBeTrue();
+            decryptResult2.IsSuccess.ShouldBeTrue();
+            File.ReadAllText(decryptedFile.FullName).ShouldBe(content);
+        }
+        finally
+        {
+            // Cleanup
+            if (sourceFile.Exists) sourceFile.Delete();
+            if (encryptedFile.Exists) encryptedFile.Delete();
+            if (decryptedFile.Exists) decryptedFile.Delete();
+        }
+    }
 }

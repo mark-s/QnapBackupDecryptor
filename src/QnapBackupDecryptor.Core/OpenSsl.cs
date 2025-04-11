@@ -28,6 +28,49 @@ public static class OpenSsl
         }
     }
 
+    // create openSSl encrypted file
+    public static Result<FileInfo> Encrypt(FileInfo file, byte[] password, FileInfo outputFile)
+    {
+        var salt = GenerateSecureRandomBytes(SALT_SIZE);
+        
+        var (key, iv) = DeriveKeyAndIV(password, salt);
+        if (key.Length == 0 || iv.Length == 0 || salt.Length == 0)
+            return Result<FileInfo>.ErrorResult("Key / IV / Salt is invalid", outputFile);
+        return EncryptFile(file, key, iv, salt, outputFile);
+    }
+
+    private static Result<FileInfo> EncryptFile(FileInfo file, byte[] key, byte[] iv, byte[] salt, FileInfo outputFile)
+    {
+        var couldOpenOutputFileForWrite = false;
+        using var aes = CreateAes(key, iv);
+        try
+        {
+            using var source = file.OpenRead();
+            using var destination = outputFile.OpenWrite();
+            couldOpenOutputFileForWrite = true;
+            var encryptor = aes.CreateEncryptor();
+            using var cryptoStream = new CryptoStream(destination, encryptor, CryptoStreamMode.Write);
+            // write the salt header
+            var saltHeader = System.Text.Encoding.UTF8.GetBytes(SALT_HEADER_TEXT);
+            destination.Write(saltHeader, 0, SALT_HEADER_SIZE);
+            // write the salt
+            destination.Write(salt, 0, SALT_SIZE);
+            FileHelpers.HideFile(outputFile);
+            source.CopyTo(cryptoStream);
+            FileHelpers.ShowFile(outputFile);
+            return Result<FileInfo>.OkResult(outputFile);
+        }
+        catch (Exception ex)
+        {
+            if (couldOpenOutputFileForWrite == false)
+                return Result<FileInfo>.ErrorResult("could not encrypt - could not write to output file", outputFile, ex);
+            if (outputFile.TryDelete())
+                return Result<FileInfo>.ErrorResult("could not encrypt", outputFile, ex);
+            else
+                return Result<FileInfo>.ErrorResult("could not encrypt and failed to delete temp encrypt file.", outputFile, ex);
+        }
+    }
+
     public static Result<FileInfo> Decrypt(FileInfo encryptedFile, byte[] password, FileInfo outputFile)
     {
         encryptedFile.Refresh();
@@ -139,5 +182,15 @@ public static class OpenSsl
         aes.Padding = PaddingMode.PKCS7;
 
         return aes;
+    }
+
+    private static byte[] GenerateSecureRandomBytes(int length)
+    {
+        var randomBytes = new byte[length];
+        using (var rng = RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(randomBytes);
+        }
+        return randomBytes;
     }
 }
